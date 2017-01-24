@@ -80,7 +80,7 @@ casper.run(function() {
 */
 	console.log(array.length);
 
-	fs.write("./link_results.json", JSON.stringify(array), 'w');
+	fs.write("./link_results.json", JSON.stringify(array, null, "\t"), 'w');
 	var timeEnd = performance.now();
 	console.log('It took ' + ((timeEnd - timeStart)/1000) + ' s.');
 	
