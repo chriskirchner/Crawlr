@@ -1,6 +1,11 @@
 var express = require('express');
 var app = express();
+var http = require('http').Server(app);
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
+var io = require('socket.io')(http);
+
+//reaper is the scraper nightmare
+var reaper = require('./scraper/nightmare');
 
 
 app.engine('handlebars', handlebars.engine);
@@ -17,11 +22,18 @@ app.use(bodyParser.json());
 app.use(express.static(__dirname + '/public'));
 
 
-
+//home page resource
 app.get('/',function(req,res){
   res.render('home');
 });
 
+
+io.on('connection', function(socket){
+  socket.on('reap urls', function(socket){
+      console.log('starting to reap');
+      reaper(io);
+  });
+});
 
 
 /*route handler for 404 errors */
@@ -37,6 +49,10 @@ app.use(function(err, req, res, next){
   res.render('500');
 });
 
-app.listen(app.get('port'), function(){
+// app.listen(app.get('port'), function(){
+//   console.log('Express started on http://localhost:' + app.get('port') + '; press Ctrl-C to terminate.');
+// });
+
+http.listen(app.get('port'), function(){
   console.log('Express started on http://localhost:' + app.get('port') + '; press Ctrl-C to terminate.');
 });
