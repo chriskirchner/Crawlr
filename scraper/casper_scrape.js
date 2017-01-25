@@ -48,14 +48,19 @@ function verifyUniqueLinks(arr)
 	// Loop through the array and push only unique elements to the r array
 	var n = {},
 		r = [];
+
 	for(var i = 0; i < arr.length; i++) 
 	{
 		if (!n[arr[i]] && (!arr[i].search(/^http[s]?:\/\//)) 
 			&& (arr[i] != startURL) && (arr[i] != (startURL + '/')) 
 			&& ( !n[(arr[i] + '/')]) && ( !n[(arr[i].replace(/\/+$/, ""))]) ) 
 		{
-			n[arr[i]] = true; 
-			r.push(arr[i]); 
+			n[arr[i]] = true;
+
+			var obj = new Object();
+   			obj.url = arr[i]; 
+
+			r.push( obj ); 
 		}
 	}
 //	var t1 = performance.now();
@@ -63,7 +68,6 @@ function verifyUniqueLinks(arr)
 
 	return r;
 }
-
 
 
 casper.run(function() {
