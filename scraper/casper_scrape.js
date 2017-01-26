@@ -8,7 +8,7 @@ var casper = require('casper').create(),
 	links,
 	array = [],
 	startURL = 'http://www.nytimes.com',
-	timeStart = performance.now();
+	//timeStart = performance.now();
 
 
 // Used for Scrape choice 2

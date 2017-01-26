@@ -33,18 +33,6 @@
     <script type="text/javascript", src="/js/static.js"></script>
     <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script>
-        $('h1.section-heading').css({'color':'yellow'});
-        var io = io();
-        $('button.btn.btn-default').click(function(){
-            io.emit('reap urls');
-
-        });
-        io.on('node', function(node){
-            var item = $('<li>').text(node).css({'color':'white'});
-            $('#scraper-content').append(item);
-        });
-
-    </script>
+    <script src="/client_js/socketio.js"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
-var handlebars = require('express-handlebars').create({defaultLayout:'main'});
+var handlebars = require('express-handlebars').create({defaultLayout:'d3'});
 var io = require('socket.io')(http);
 
 //reaper is the scraper nightmare
@@ -24,7 +24,7 @@ app.use(express.static(__dirname + '/public'));
 
 //home page resource
 app.get('/',function(req,res){
-  res.render('home');
+  res.render('ddd');
 });
 
 
