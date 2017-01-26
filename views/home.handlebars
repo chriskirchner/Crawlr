@@ -19,24 +19,23 @@
                     <h4>Crawlr is a web crawler that generates interactive graphical visualizations based upon a starting URL using graph traversal algorithms.<h4>
                     <hr class="light">
                     {{!-- <p class="text-faded">WEB2: GRAPHICAL CRAWLER: Write a web page that crawls the web, following links from place to place, building a graphical model of places traveled</p> --}}
-                    <div class="col-lg-2">
-                        <div class="dropdown">
-                            <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">Crawl Type
-                            <span class="caret"></span>
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                                <li><a href="#">Depth-First Crawl</a></li>
-                                <li role="separator" class="divider"></li>
-                                <li><a href="#">Breadth-First Crawl</a></li>
-                            </ul>
-                        </div>
+
+                    <form>
+                    <fieldset>
+
+                    <div class="form-inline col-lg-4">
+                        <label class="radio-inline"><input type="radio" name="optradio">Option 1</label>
+                        <label class="radio-inline"><input type="radio" name="optradio">Option 2</label>
                     </div>
-                    <div class="col-lg-2">
+
+
+
+                    <div class="col-lg-4">
                         <div class="input-group">
                         <input type="text" class="form-control" placeholder="# Levels">
                         </div>
                     </div>
-                    <div class="col-lg-3">
+                    <div class="col-lg-4">
                         <div class="input-group">
                         <input type="text" class="form-control" placeholder="Search term">
                         </div>
@@ -49,6 +48,8 @@
                         </span>
                         </div><!-- /input-group -->
                     </div><!-- /.col-lg-6 -->
+                    </fieldset>
+                    </form>
                 </div>
             </div>
         </div>
