@@ -3,14 +3,16 @@
  */
 
 var Nightmare = require('nightmare');
-var nm = Nightmare({
-    show: false,
-    'web-preferences': {'web-security': false}
-});
 
-var nightmare = function(io) {
-    return nm
-        .goto('https://www.google.com/')
+
+var nightmare = function(io, socket, user_input) {
+	console.log('socket: reaping...');
+	var nm = Nightmare({
+		show: false,
+		'web-preferences': {'web-security': false}
+	});
+	return nm
+        .goto(user_input.url)
         .evaluate(function () {
             var links = document.querySelectorAll('a');
             var hrefs = [];
@@ -21,9 +23,12 @@ var nightmare = function(io) {
         })
         .end()
         .then(function (result) {
-            io.emit('node', result);
+            for (var i=0; i<result.length; i++){
+                io.emit('node', result[i]);
+            }
         })
         .then(function(){
+	        socket.disconnect();
             console.log('done reaping!');
         })
         .catch(function (error) {

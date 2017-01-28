@@ -1,13 +1,12 @@
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
-var handlebars = require('express-handlebars').create({defaultLayout:'d3'});
+var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var io = require('socket.io')(http);
 
-//reaper is the scraper nightmare
-var reaper = require('./scraper/nightmare');
 
 
+//setup handlebars
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 app.set('port', 8080);
@@ -24,26 +23,34 @@ app.use(express.static(__dirname + '/public'));
 
 //home page resource
 app.get('/',function(req,res){
-  res.render('ddd');
+  res.render('home');
 });
 
-/*Handles the inserting and deleting rows in the mySQL table*/
-app.post('/', function(req, res, next){
-  
-  if (req.body.action === 'insert'){
-    var data = req.body.formInfo;
-    console.log(data);
-    
-  }
-});
-
-
-// io.on('connection', function(socket){
-//   socket.on('reap urls', function(socket){
-//       console.log('starting to reap');
-//       reaper(io);
-//   });
+//get ajax request from client with url, etc
+// app.post('/', function(req, res, next){
+//
+//   if (req.body.action === 'insert'){
+//     var data = req.body.formInfo;
+//     console.log(data);
+//
+//   }
 // });
+
+
+//reaper is the scraper nightmare
+var reaper = require('./scraper/nightmare');
+
+io.on('connect', function(socket){
+  console.log('socket: user connected to socket.io');
+  socket.on('reap urls', function(msg){
+      reaper(io, socket, msg);
+  });
+  socket.on('disconnect', function(){
+      console.log('user disconnected');
+  });
+});
+
+
 
 
 /*route handler for 404 errors */

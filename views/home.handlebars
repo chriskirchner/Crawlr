@@ -4,72 +4,38 @@
             <div class="col-lg-8 col-lg-offset-2 text-center" >
                 <h1 class="section-heading">Crawlr</h1>
                 <h4>Crawlr is a web crawler that generates interactive graphical visualizations based upon a starting URL using graph traversal algorithms.<h4>
-                {{!-- <hr class="light"> --}}
-                {{!-- <p class="text-faded">WEB2: GRAPHICAL CRAWLER: Write a web page that crawls the web, following links from place to place, building a graphical model of places traveled</p> --}}
-                {{!-- <div class="col-lg-2">
-                    <div class="dropdown">
-                        <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">Crawl Type
-                        <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                            <li><a href="#">Depth-First Crawl</a></li>
-                            <li role="separator" class="divider"></li>
-                            <li><a href="#">Breadth-First Crawl</a></li>
-                        </ul>
+
+
+
+
+                <form action ="/" id="crawl-form" class="form-inline" method="post">
+
+                <hr class="light">
+
+                    <div class="form-group">
+                      <p>
+                        <label for="url">URL</label>
+                        <input type="text" class="form-control" name="url" id="url" value="https://www.google.com">
+                        <label for="search_term">Search Term</label>
+                        <input type="text" class="form-control" name="search_term" id="search_term" value="News">
+                      </p>
+                      <p>
+                        <label for="levels">Levels</label>
+                        <input type="levels" class="form-control" name="levels" id="levels" value="Ex: 4">
+                        <label for="crawl_type">Crawl Type</label>
+                        <select name="crawl_type" id="crawl_type">
+                          <option value="1" selected>Depth-First</option>
+                          <option value="0">Breadth-First</option>
+                        </select>
                     </div>
-                </div>
-                <div class="col-lg-2">
-                    <div class="input-group">
-                    <input type="text" class="form-control" placeholder="# Levels">
-                    </div>
-                </div>
-                <div class="col-lg-3">
-                    <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Search term">
-                    </div>
-                </div>
-                <div class="col-lg-5">
-                    <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Enter URL...">
-                    <span class="input-group-btn">
-                    <button class="btn btn-default" type="button">Go!</button>
-                    </span>
-                    </div><!-- /input-group -->
-                </div> --}}<!-- /.col-lg-6 -->
-            {{!-- </div> --}}
+                    </p>
+                    <p>
+                      <input type="submit" class="btn btn-primary" name="crawlSubmit" id="crawlSubmit" value="Crawl">
+                    </p>
 
-
-
-
-    <form action ="/" id="crawl-form" class="form-inline" method="post">
-    
-    <hr class="light">
-      
-        <div class="form-group">
-          <p>
-            <label for="url">URL</label>
-            <input type="text" class="form-control" name="url" id="url" placeholder="https://nytimes.com">
-            <label for="search_term">Search Term</label>
-            <input type="text" class="form-control" name="search_term" id="search_term" placeholder="News">
-          </p>
-          <p>
-            <label for="levels">Levels</label>
-            <input type="levels" class="form-control" name="levels" id="levels" placeholder="Ex: 4">
-            <label for="crawl_type">Crawl Type</label>
-            <select name="crawl_type" id="crawl_type">
-              <option value="1" selected>Depth-First</option>
-              <option value="0">Breadth-First</option>
-            </select>
-        </div>
-        </p>
-        <p>
-          <input type="submit" class="btn btn-primary" name="crawlSubmit" id="crawlSubmit" value="Crawl">
-        </p>
-    
-    </form>
-        </div>
-        <div>
-            <ul id="scraper-content"></ul>
+                </form>
+            </div>
+        <div id="scraper-content">
         </div>
     </div>
 </section>

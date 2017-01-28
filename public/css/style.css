@@ -24,3 +24,8 @@ section {
 .bg-primary {
 	background-color: #333;
 }
+
+svg {
+	display: block;
+	margin: 0 auto;
+}
