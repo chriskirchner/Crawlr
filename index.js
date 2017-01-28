@@ -27,13 +27,23 @@ app.get('/',function(req,res){
   res.render('ddd');
 });
 
-
-io.on('connection', function(socket){
-  socket.on('reap urls', function(socket){
-      console.log('starting to reap');
-      reaper(io);
-  });
+/*Handles the inserting and deleting rows in the mySQL table*/
+app.post('/', function(req, res, next){
+  
+  if (req.body.action === 'insert'){
+    var data = req.body.formInfo;
+    console.log(data);
+    
+  }
 });
+
+
+// io.on('connection', function(socket){
+//   socket.on('reap urls', function(socket){
+//       console.log('starting to reap');
+//       reaper(io);
+//   });
+// });
 
 
 /*route handler for 404 errors */
