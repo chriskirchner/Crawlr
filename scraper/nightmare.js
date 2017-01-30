@@ -16,7 +16,7 @@ var nightmare = function(io, socket, user_input) {
         .evaluate(function () {
             var links = document.querySelectorAll('a');
             var hrefs = [];
-            for (var i=0; i<links.length; i++){
+            for (var i=0; i<2; i++){
                 hrefs.push(links[i].href);
             }
             return hrefs;
@@ -24,7 +24,10 @@ var nightmare = function(io, socket, user_input) {
         .end()
         .then(function (result) {
             for (var i=0; i<result.length; i++){
-                io.emit('node', result[i]);
+                io.emit('node',
+	                [{'id': 'http://www.google.com'},
+	                {'id': result[i]}]
+                );
             }
         })
         .then(function(){

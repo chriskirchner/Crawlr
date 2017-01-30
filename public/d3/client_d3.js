@@ -7,7 +7,7 @@ var margin = {
 	right: '25'
 };
 
-var svg = d3.select('body')
+var svg = d3.select('section')
 	.append('svg')
 	.attr('width', width)
 	.attr('height', height);
@@ -17,10 +17,11 @@ function getRandomRange(min, max){
 	return Math.random() * (max - min) + min;
 }
 
-export default function updateGFX(link){
-	var node = svg.data(link).enter().append("circle");
-	var randX = getRandomRange(left, width - margin.right);
-	var randY = getRandomRange(top, height - margin.bottom);
+function updateGFX(link){
+	var randX = getRandomRange(margin.left, width - margin.right);
+	var randY = getRandomRange(margin.top, height - margin.bottom);
+	var node = d3.select('svg').append('circle');
+	node.data(link);
 	node.attr('cx', randX).attr('cy', randY).attr('r', '25');
+	node.style('fill', 'white');
 }
-
