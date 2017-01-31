@@ -74,11 +74,11 @@ nodeGroup = g.append("g");
 
 //setup force layout template
 simulation = d3.forceSimulation(nodes)
-		// .force("charge", d3.forceManyBody().strength(-1000))
-		// .force("link", d3.forceLink(links).distance(200))
+		.force("charge", d3.forceManyBody().strength(-1))
+		//.force("link", d3.forceLink(links).distance(5))
 		// .force("x", d3.forceX())
 		// .force("y", d3.forceY(links))
-		// .alphaTarget(1)
+		.alphaTarget(1)
 		.on("tick", ticked);
 
 function addNode(node, nodes, group){
