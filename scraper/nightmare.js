@@ -16,7 +16,7 @@ var nightmare = function(io, socket, user_input) {
         .evaluate(function () {
             var links = document.querySelectorAll('a');
             var hrefs = [];
-            for (var i=0; i<2; i++){
+            for (var i=0; i<links.length; i++){
                 hrefs.push(links[i].href);
             }
             return hrefs;

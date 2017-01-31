@@ -49,76 +49,100 @@
 // 	parent.push(node);
 // }
 
-function setupGFX(){
 
-}
 //set size of viewport
 var width = 960,
 	height = 500;
-
-//setup viewport with width and height
-var svg = d3.select('section')
-	.append('svg')
-	.attr('width', width)
-	.attr('height', height);
 
 //setup edge and node lists
 var nodes = [],
 	links = [];
 
+//setup variables
+var simulation, svg, g, linkGroup, nodeGroup;
+
+//setup viewport with width and height
+svg = d3.select('section')
+	.append('svg')
+	.attr('width', width)
+	.attr('height', height);
+
+//setup groups
+g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+linkGroup = g.append("g");
+nodeGroup = g.append("g");
+
 //setup force layout template
-var simulation = d3.forceSimulation(nodes)
-	.force("charge", d3.forceManyBody().strength(-1000))
-	.force("link", d3.forceLink().distance(200))
-	.force("x", d3.forceX())
-	.force("y", d3.forceY(links))
-	.alphaTarget(1)
-	.on("tick", ticked);
+simulation = d3.forceSimulation(nodes)
+		// .force("charge", d3.forceManyBody().strength(-1000))
+		// .force("link", d3.forceLink(links).distance(200))
+		// .force("x", d3.forceX())
+		// .force("y", d3.forceY(links))
+		// .alphaTarget(1)
+		.on("tick", ticked);
 
-//setup edge and nodes
-var g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")"),
-	domLinks = g.append("g").attr("stroke", "#000").attr("stroke-width", 1.5).selectAll(".link"),
-	domNodes = g.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5).selectAll(".node");
+function addNode(node, nodes, group){
+	nodes.push(node);
+	group
+		.append('circle')
+		.attr("r", 10)
+		.attr('class', 'node')
+		.attr('fill', 'white')
+		.datum(node)
+		.call(
+			d3.drag()
+				.on("start", startDrag)
+				.on("drag", drag)
+				.on("end", endDrag)
+		);
+}
 
+//https://roshansanthosh.wordpress.com/2016/09/25/forces-in-d3-js-v4/
+function startDrag(d)
+{
+	simulation.restart();
+	simulation.alpha(1.0);
+	d.fx = d.x;
+	d.fy = d.y;
+}
+
+function drag(d)
+{
+	d.fx = d3.event.x;
+	d.fy = d3.event.y;
+}
+
+function endDrag(d)
+{
+	d.fx = null;
+	d.fy = null;
+	simulation.alphaTarget(0.1);
+}
+
+function addLink(link_start, link_end, links, group){
+	links.push({source: link_start, target: link_end});
+	group
+		.append('line')
+		.attr('class', 'link')
+		.attr('stroke', 'white')
+		.attr('stroke-width', 1)
+		.datum({source: link_start, target: link_end});
+}
+
+function setupGFX(start){
+	addNode(start, nodes, nodeGroup);
+	addLink(start, start, links, linkGroup);
+
+	//fix root node to center
+	nodes[0].fx = 0;
+	nodes[0].fy = 0;
+}
 
 //inspired by - https://gist.github.com/mbostock/1095795
 function updateGFX(parent, site){
 
-
-	links.push({source: parent, target: site});
-	nodes.push(site);
-
-	console.log(nodes);
-	console.log(links);
-
-	// domNodes
-	// 	.datum(site)
-	// 	.enter()
-	// 	.append("circle")
-	// 	.attr("r", 10)
-	// 	.attr('class', '.node')
-	// 	.attr('fill', 'white')
-	// 	.merge(domNodes);
-	//
-	// domLinks
-	// 	.datum(parent +"-"+ site)
-	// 	.enter()
-	// 	.append("line")
-	// 	.merge(domLinks);
-
-
-	domNodes = domNodes.data(nodes, function(d) { return d.id;});
-	domNodes.exit().remove();
-	domNodes = domNodes.enter().append("circle").attr("fill", "white").attr("r", 8).merge(domNodes);
-	// Apply the general update pattern to the links.
-	if (parent == null){
-		domLinks = domLinks.data(links, function(d) { return d.source.id + "-" + d.target.id; });
-	}
-	else {
-		domLinks = domLinks.data(links, function(d) { return "null" + "-" + d.target.id; });
-	}
-	domLinks.exit().remove();
-	domLinks = domLinks.enter().append("line").merge(domLinks);
+	addNode(site, nodes, nodeGroup);
+	addLink(parent, site, links, linkGroup);
 
 	simulation.nodes(nodes);
 	simulation.force("link").links(links);
@@ -126,14 +150,18 @@ function updateGFX(parent, site){
 }
 
 function ticked(){
-	if (nodes.length > 0){
-		nodes[0].x = 0;
-		nodes[0].y = 0;
-	}
-	domNodes.attr("cx", function(d) {return d.x;})
+	// if (nodes.length > 0){
+	// 	nodes[0].x = 0;
+	// 	nodes[0].y = 0;
+	// }
+	nodeGroup
+		.selectAll(".node")
+		.attr("cx", function(d) {return d.x;})
 		.attr("cy", function(d) {return d.y;});
 
-	domLinks.attr("x1", function(d) {return d.source.x;})
+	linkGroup
+		.selectAll(".link")
+		.attr("x1", function(d) {return d.source.x;})
 		.attr("y1", function(d) {return d.source.y;})
 		.attr("x2", function(d) {return d.target.x;})
 		.attr("y2", function(d) {return d.target.y;});
@@ -147,12 +175,14 @@ $(document).ready(function(){
 		e.preventDefault();
 		console.log('socketio: connecting to server');
 		io = io.connect();
+
 		var user_input = {};
 		user_input.id = $('#url').val();
 		user_input.url = $('#url').val();
 		user_input.levels = $('#levels').val();
 		user_input.keyword = $('#search_term').val();
-		updateGFX(user_input, user_input);
+
+		setupGFX(user_input);
 		io.emit('reap urls', user_input);
 		io.on('node', function(node){
 			updateGFX(node[0], node[1]);
