@@ -72,14 +72,7 @@ g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 
 linkGroup = g.append("g");
 nodeGroup = g.append("g");
 
-//setup force layout template
-simulation = d3.forceSimulation(nodes)
-		.force("charge", d3.forceManyBody().strength(-1))
-		//.force("link", d3.forceLink(links).distance(5))
-		// .force("x", d3.forceX())
-		// .force("y", d3.forceY(links))
-		.alphaTarget(1)
-		.on("tick", ticked);
+
 
 function addNode(node, nodes, group){
 	nodes.push(node);
@@ -129,24 +122,51 @@ function addLink(link_start, link_end, links, group){
 		.datum({source: link_start, target: link_end});
 }
 
-function setupGFX(start){
-	addNode(start, nodes, nodeGroup);
-	addLink(start, start, links, linkGroup);
+// function setupGFX(start){
+// 	addNode(start, nodes, nodeGroup);
+// 	addLink(start, start, links, linkGroup);
+//
+// 	//fix root node to center
+// 	nodes[0].fx = 0;
+// 	nodes[0].fy = 0;
+// }
 
-	//fix root node to center
-	nodes[0].fx = 0;
-	nodes[0].fy = 0;
+//setup force layout template
+simulation = d3.forceSimulation(nodes)
+	.force("charge", d3.forceManyBody().strength(-1))
+	.force("link", d3.forceLink().id(function(d) { return d.url; }).distance(100))
+	// .force("x", d3.forceX(width / 2))
+	// .force("y", d3.forceY(height / 2))
+	.on("tick", ticked);
+
+function findParent(parent, links){
+	return links.filter(function(e){
+		if (e.url == parent.url){
+			return e;
+		}
+	})[0]
 }
 
-//inspired by - https://gist.github.com/mbostock/1095795
-function updateGFX(parent, site){
 
-	addNode(site, nodes, nodeGroup);
-	addLink(parent, site, links, linkGroup);
+//inspired by - https://gist.github.com/mbostock/1095795
+function updateGFX(node){
+
+	addNode(node, nodes, nodeGroup);
+	if (node.parent == null){
+		//fix root node
+		nodes[0].fx = 0;
+		nodes[0].fy = 0;
+		node.parent = node;
+	}
+	var parent = findParent(node.parent, nodes);
+	addLink(parent, node, links, linkGroup);
 
 	simulation.nodes(nodes);
+	//f_links = d3.forceLink(links).id(function(d){return d.url;});
 	simulation.force("link").links(links);
 	simulation.alpha(1).restart();
+	console.log(links);
+	console.log(nodes);
 }
 
 function ticked(){
@@ -174,18 +194,24 @@ $(document).ready(function(){
 	$('#crawl-form').on('submit', function(e){
 		e.preventDefault();
 		console.log('socketio: connecting to server');
-		io = io.connect();
+		io = io.connect({
+			reconnection: false
+		});
 
 		var user_input = {};
-		user_input.id = $('#url').val();
 		user_input.url = $('#url').val();
-		user_input.levels = $('#levels').val();
-		user_input.keyword = $('#search_term').val();
+		user_input.level = 0;
+		user_input.parent = null;
+		// setupGFX(user_input);
 
-		setupGFX(user_input);
 		io.emit('reap urls', user_input);
-		io.on('node', function(node){
-			updateGFX(node[0], node[1]);
+		io.on('node send', function(node){
+			gfxNode = node;
+			node.level = null;
+			if (node.parent != null){
+				node.parent.level = null;
+			}
+			updateGFX(node);
 		});
 		io.on('disconnect', function(){
 			console.log('server disconnected');

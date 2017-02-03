@@ -40,17 +40,19 @@ app.get('/',function(req,res){
 //reaper is the scraper nightmare
 var reaper = require('./scraper/nightmare');
 
+//scrapman?
+var scrapman = require('./scraper/scrapman');
+
 io.on('connect', function(socket){
   console.log('socket: user connected to socket.io');
-  socket.on('reap urls', function(msg){
-      reaper(io, socket, msg);
+  socket.on('reap urls', function(start_node){
+    console.log('reaping...');
+    scrapman(socket, start_node, 2);
   });
   socket.on('disconnect', function(){
-      console.log('user disconnected');
+  	console.log('user disconnected');
   });
 });
-
-
 
 
 /*route handler for 404 errors */
