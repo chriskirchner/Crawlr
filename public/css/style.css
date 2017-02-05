@@ -10,6 +10,10 @@ section {
 	background-color: #333;
 }
 
+select {
+	color: black;
+}
+
 
 .center {
     display:table-cell;

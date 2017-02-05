@@ -15,17 +15,17 @@
                     <div class="form-group">
                       <p>
                         <label for="url">URL</label>
-                        <input type="text" class="form-control" name="url" id="url" value="https://www.google.com">
+                        <input type="text" class="form-control" name="url" id="url" placeholder="https://www.google.com" autocompete="on">
                         <label for="search_term">Search Term</label>
-                        <input type="text" class="form-control" name="search_term" id="search_term" value="News">
+                        <input type="text" class="form-control" name="search_term" id="search_term" placeholder="News">
                       </p>
                       <p>
                         <label for="levels">Levels</label>
-                        <input type="levels" class="form-control" name="levels" id="levels" value="Ex: 4">
+                        <input type="number" class="form-control" name="levels" id="levels" placeholder="Ex: 4">
                         <label for="crawl_type">Crawl Type</label>
                         <select name="crawl_type" id="crawl_type">
-                          <option value="1" selected>Depth-First</option>
-                          <option value="0">Breadth-First</option>
+                          <option value="0">Depth-First</option>
+                          <option value="1">Breadth-First</option>
                         </select>
                     </div>
                     </p>
@@ -34,7 +34,26 @@
                     </p>
 
                 </form>
+                <br>
+
+        {{#if url_history}}
+        <div id="user_history">
+        <form action ="/" id="reset-form" class="form-inline" method="post">
+            <label for="url_history">Search History</label>
+                <select name="url_history" id="url_history2">
+                <option selected="selected"></option>
+                {{#each url_history}}
+                  <option>URL: {{this.url}} | Search Term: {{this.search_term}} | Levels: {{this.levels}} | Crawl Type: {{this.crawl_type}}</option>
+                {{/each}}  
+                </select>
+                <p>
+             <input type="submit" class="btn btn-primary" name="resetSubmit" id="resetSubmit" value="Clear History">
+                </p>
+        </form>
+        </div>
+        {{/if}}
             </div>
+
         <div id="scraper-content">
         </div>
     </div>
