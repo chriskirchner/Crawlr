@@ -2,12 +2,13 @@
 
 html, body {
 	height: 100%;
-	background-color: #333;
+	/*background-color: #333;*/
+	background-image: url('/images/dark_background.jpg');
 }
 
 section {
 	height: 100%;
-	background-color: #333;
+	/*background-color: #333;*/
 }
 
 select {
@@ -26,7 +27,8 @@ select {
 }
 
 .bg-primary {
-	background-color: #333;
+	/*background-color: #333;*/
+	background-image: url('/images/dark_background.jpg');
 }
 
 svg {
