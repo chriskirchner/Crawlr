@@ -159,14 +159,15 @@ function updateGFX(node){
 		node.parent = node;
 	}
 	var parent = findParent(node.parent, nodes);
+
 	addLink(parent, node, links, linkGroup);
 
+
 	simulation.nodes(nodes);
-	//f_links = d3.forceLink(links).id(function(d){return d.url;});
 	simulation.force("link").links(links);
 	simulation.alpha(1).restart();
-	console.log(links);
-	console.log(nodes);
+	// console.log(links.toString());
+	// console.log(nodes);
 }
 
 function ticked(){
@@ -206,11 +207,6 @@ $(document).ready(function(){
 
 		io.emit('reap urls', user_input);
 		io.on('node send', function(node){
-			gfxNode = node;
-			node.level = null;
-			if (node.parent != null){
-				node.parent.level = null;
-			}
 			updateGFX(node);
 		});
 		io.on('disconnect', function(){

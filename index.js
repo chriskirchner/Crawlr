@@ -3,8 +3,15 @@ var app = express();
 var http = require('http').Server(app);
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var io = require('socket.io')(http);
+var spawn = require('child_process').spawn;
+var pythonShell = require('python-shell');
 
-
+var shellOptions = {
+  mode: 'json',
+  pythonPath: './virtualenv/bin/python',
+  pythonOptions: ['-u'],
+  scriptPath: './scraper'
+};
 
 //setup handlebars
 app.engine('handlebars', handlebars.engine);
@@ -45,11 +52,40 @@ var scrapman = require('./scraper/scrapman');
 
 io.on('connect', function(socket){
   console.log('socket: user connected to socket.io');
+  var shell = null;
   socket.on('reap urls', function(start_node){
     console.log('reaping...');
-    scrapman(socket, start_node, 2);
+    shellOptions.args = [start_node.url];
+    shell = new pythonShell('multithreaded.py', shellOptions);
+    // pythonShell.run('multithreaded.py', shellOptions, function(err, results){
+    //   if (err) throw err;
+    //   var j = JSON.parse(results.toString());
+    //   console.log(j);
+    // });
+
+    shell.on('message', function(message){
+      socket.emit('node send', message);
+    });
+
+    // var scraper = spawn('./virtualenv/bin/python',
+    //     ['./scraper/multithreaded.py', start_node.url]);
+    // var json_string = '';
+    // scraper.stdout.on('data', function(d){
+    //   json_string += d.toString();
+    //   //socket.emit('node send',JSON.parse(JSON.stringify(d.toString())));
+    // });
+    // scraper.stdout.on('end', function(){
+    //   var j = JSON.parse(JSON.stringify(json_string));
+    //   for (var k in j){
+    //     console.log(k);
+    //   }
+    //   json = '';
+    // });
   });
   socket.on('disconnect', function(){
+    if (shell){
+      shell.end();
+    }
   	console.log('user disconnected');
   });
 });
