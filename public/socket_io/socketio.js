@@ -144,7 +144,7 @@ function findParent(parent, links){
 		if (e.url == parent.url){
 			return e;
 		}
-	})[0]
+	})[0];
 }
 
 
@@ -152,7 +152,7 @@ function findParent(parent, links){
 function updateGFX(node){
 
 	addNode(node, nodes, nodeGroup);
-	if (node.parent == null){
+	if (node.parent === null){
 		//fix root node
 		nodes[0].fx = 0;
 		nodes[0].fy = 0;
@@ -201,12 +201,20 @@ $(document).ready(function(){
 
 		var user_input = {};
 		user_input.url = $('#url').val();
+		user_input.search_term = $('#search_term').val();
+		user_input.levels = $('#levels').val();
+		user_input.crawl_type = $('#crawl_type').val();
 		user_input.level = 0;
 		user_input.parent = null;
 		// setupGFX(user_input);
 
 		io.emit('reap urls', user_input);
 		io.on('node send', function(node){
+			gfxNode = node;
+			node.level = null;
+			if (node.parent !== null){
+				node.parent.level = null;
+			}
 			updateGFX(node);
 		});
 		io.on('disconnect', function(){

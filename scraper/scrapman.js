@@ -31,11 +31,11 @@ function BFS(socket, node, max_level){
                 new_node.url = links[i];
                 new_node.parent = node;
                 new_node.level = next_level;
-                BFS(socket, new_node, max_level)
+                BFS(socket, new_node, max_level);
             }
 		});
 	}
-};
+}
 
 
 

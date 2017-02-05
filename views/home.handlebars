@@ -1,7 +1,7 @@
 <section class="bg-primary" id="about">
     <div class="container">
         <div class="row" >
-            <div class="col-lg-8 col-lg-offset-2 text-center" >
+            <div class="col-lg-10 col-lg-offset-1 text-center" >
                 <h1 class="section-heading">Crawlr</h1>
                 <h4>Crawlr is a web crawler that generates interactive graphical visualizations based upon a starting URL using graph traversal algorithms.<h4>
 
@@ -15,17 +15,19 @@
                     <div class="form-group">
                       <p>
                         <label for="url">URL</label>
-                        <input type="text" class="form-control" name="url" id="url" value="https://www.google.com">
+                        <input type="text" class="form-control" name="url" id="url" placeholder="https://www.google.com" autocompete="on">
+                        &nbsp;&nbsp;&nbsp;
                         <label for="search_term">Search Term</label>
-                        <input type="text" class="form-control" name="search_term" id="search_term" value="News">
+                        <input type="text" class="form-control" name="search_term" id="search_term" placeholder="News">
                       </p>
                       <p>
                         <label for="levels">Levels</label>
-                        <input type="levels" class="form-control" name="levels" id="levels" value="Ex: 4">
+                        <input type="number" class="form-control" name="levels" id="levels" placeholder="Ex: 4">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                         <label for="crawl_type">Crawl Type</label>
                         <select name="crawl_type" id="crawl_type">
-                          <option value="1" selected>Depth-First</option>
-                          <option value="0">Breadth-First</option>
+                          <option value="0">Depth-First</option>
+                          <option value="1">Breadth-First</option>
                         </select>
                     </div>
                     </p>
@@ -34,7 +36,25 @@
                     </p>
 
                 </form>
+                <br>
+
+        {{#if url_history}}
+        <div id="user_history">
+        <form action ="/" id="reset-form" class="form-inline" method="post">
+            <label for="url_history">Search History</label>
+                <select name="url_history" id="url_history2">
+                <option selected="selected"></option>
+                {{#each url_history}}
+                  <option>URL: {{this.url}} | Search Term: {{this.search_term}} | Levels: {{this.levels}} | Crawl Type: {{this.crawl_type}}</option>
+                {{/each}}  
+                </select>
+             <input type="submit" class="btn btn-primary btn-xs" name="resetSubmit" id="resetSubmit" value="Clear History">
+                
+        </form>
+        </div>
+        {{/if}}
             </div>
+
         <div id="scraper-content">
         </div>
     </div>
