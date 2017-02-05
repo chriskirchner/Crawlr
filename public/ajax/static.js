@@ -80,12 +80,6 @@ function getHistory() {
             crawlTypeHist = '1';
         }
 
-
-        console.log(urlHist);
-        console.log(searchTermHist);
-        console.log(levelsHist);
-        console.log(crawlTypeHist);
-
         document.getElementsByName('url')[0].value = urlHist;
         document.getElementsByName('search_term')[0].value = searchTermHist;
         document.getElementsByName('levels')[0].value = levelsHist;
