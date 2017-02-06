@@ -5,7 +5,7 @@ from lxml import html
 import sys
 import json
 
-NUM_THREADS = 100
+NUM_THREADS = 500
 
 class Scraper(threading.Thread):
 
@@ -65,7 +65,7 @@ class Scraper(threading.Thread):
 
 if __name__ == "__main__":
 
-    start_url = sys.argv[1]
+    start_url = "http://www.google.com"
 
     visited_lock = threading.RLock()
     visited_links = set()

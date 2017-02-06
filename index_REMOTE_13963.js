@@ -3,16 +3,9 @@ var app = express();
 var http = require('http').Server(app);
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var io = require('socket.io')(http);
-var spawn = require('child_process').spawn;
-var pythonShell = require('python-shell');
 var session = require('express-session');
 
-var shellOptions = {
-  mode: 'json',
-  pythonPath: './virtualenv/bin/python',
-  pythonOptions: ['-u'],
-  scriptPath: './scraper'
-};
+
 
 //setup handlebars
 app.engine('handlebars', handlebars.engine);
@@ -68,41 +61,27 @@ app.post('/', function(req, res, next){
 
 
 //reaper is the scraper nightmare
-// var reaper = require('./scraper/nightmare');
+var reaper = require('./scraper/nightmare');
 
 //scrapman?
-// var scrapman = require('./scraper/scrapman');
+var scrapman = require('./scraper/scrapman');
 
 io.on('connect', function(socket){
   console.log('socket: user connected to socket.io');
-  var shell = null;
   socket.on('reap urls', function(start_node){
-    console.log('reaping...');
+    // console.log('reaping...');
+    
     session.url_history.push(start_node);
-    shellOptions.args = [start_node.url];
-    shell = new pythonShell('multithreaded.py', shellOptions);
-    shell.on('message', function(message){
-      console.log(message);
-      socket.emit('node send', message);
-    });
-    shell.on('error', function(err){
-      console.log(err);
-    });
-
+    
     // scrapman(socket, start_node, 2);
-	
   });
   socket.on('disconnect', function(){
-    //need to kill children
-    if (shell){
-      shell.childProcess.kill('SIGINT');
-    }
   	console.log('user disconnected');
   });
-  // process.on('SIGINT', function() {
-  //   socket.close();
-  //   process.exit();
-  // });
+  process.on('SIGINT', function() {
+  socket.close();
+  process.exit();
+});
 });
 
 

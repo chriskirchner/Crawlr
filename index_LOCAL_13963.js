@@ -5,7 +5,6 @@ var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var io = require('socket.io')(http);
 var spawn = require('child_process').spawn;
 var pythonShell = require('python-shell');
-var session = require('express-session');
 
 var shellOptions = {
   mode: 'json',
@@ -28,81 +27,67 @@ app.use(bodyParser.json());
 
 app.use(express.static(__dirname + '/public'));
 
-app.use(session({secret:'SuperSecretPassword'}));
-
-session.url_history = [];
 
 //home page resource
 app.get('/',function(req,res){
-
-  context = {};
-  context.url_history = session.url_history;
-
-  for (var c in context.url_history)
-  {
-    if (context.url_history[c].crawl_type == '0')
-    {
-      
-      context.url_history[c].crawl_type = "Depth-First";
-    }
-
-    else if(context.url_history[c].crawl_type == '1')
-    {
-      context.url_history[c].crawl_type = "Breadth-First";
-    }
-  }
-  
-  // console.log(context.url_history);
-  res.render('home', context);
-
+  res.render('home');
 });
 
 //get ajax request from client with url, etc
-app.post('/', function(req, res, next){
-
-  if (req.body.action === 'reset'){
-    session.url_history = [];
-
-  }
-});
+// app.post('/', function(req, res, next){
+//
+//   if (req.body.action === 'insert'){
+//     var data = req.body.formInfo;
+//     console.log(data);
+//
+//   }
+// });
 
 
 //reaper is the scraper nightmare
-// var reaper = require('./scraper/nightmare');
+var reaper = require('./scraper/nightmare');
 
 //scrapman?
-// var scrapman = require('./scraper/scrapman');
+var scrapman = require('./scraper/scrapman');
 
 io.on('connect', function(socket){
   console.log('socket: user connected to socket.io');
   var shell = null;
   socket.on('reap urls', function(start_node){
     console.log('reaping...');
-    session.url_history.push(start_node);
     shellOptions.args = [start_node.url];
     shell = new pythonShell('multithreaded.py', shellOptions);
+    // pythonShell.run('multithreaded.py', shellOptions, function(err, results){
+    //   if (err) throw err;
+    //   var j = JSON.parse(results.toString());
+    //   console.log(j);
+    // });
+
     shell.on('message', function(message){
-      console.log(message);
       socket.emit('node send', message);
     });
-    shell.on('error', function(err){
-      console.log(err);
-    });
 
-    // scrapman(socket, start_node, 2);
-	
+    // var scraper = spawn('./virtualenv/bin/python',
+    //     ['./scraper/multithreaded.py', start_node.url]);
+    // var json_string = '';
+    // scraper.stdout.on('data', function(d){
+    //   json_string += d.toString();
+    //   //socket.emit('node send',JSON.parse(JSON.stringify(d.toString())));
+    // });
+    // scraper.stdout.on('end', function(){
+    //   var j = JSON.parse(JSON.stringify(json_string));
+    //   for (var k in j){
+    //     console.log(k);
+    //   }
+    //   json = '';
+    // });
   });
   socket.on('disconnect', function(){
-    //need to kill children
     if (shell){
-      shell.childProcess.kill('SIGINT');
+      shell.end();
     }
   	console.log('user disconnected');
   });
-  // process.on('SIGINT', function() {
-  //   socket.close();
-  //   process.exit();
-  // });
 });
 
 
@@ -117,10 +102,6 @@ app.use(function(err, req, res, next){
   console.error(err.stack);
   res.status(500);
   res.render('500');
-});
-
- process.on('SIGINT', function() {
-  process.exit();
 });
 
 // app.listen(app.get('port'), function(){

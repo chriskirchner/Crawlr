@@ -131,13 +131,24 @@ function addLink(link_start, link_end, links, group){
 // 	nodes[0].fy = 0;
 // }
 
+var numTicks = 0;
+var ticksToSkip = 3;
+
 //setup force layout template
 simulation = d3.forceSimulation(nodes)
 	.force("charge", d3.forceManyBody().strength(-1))
 	.force("link", d3.forceLink().id(function(d) { return d.url; }).distance(100))
 	// .force("x", d3.forceX(width / 2))
 	// .force("y", d3.forceY(height / 2))
-	.on("tick", ticked);
+	.on("tick", function(){
+		if (numTicks > ticksToSkip){
+			ticked();
+            numTicks = 0;
+		}
+		else {
+            numTicks += 1;
+        }
+    });
 
 function findParent(parent, links){
 	return links.filter(function(e){
@@ -169,6 +180,34 @@ function updateGFX(node){
 	// console.log(links.toString());
 	// console.log(nodes);
 }
+
+//performance code from http://stackoverflow.com/questions/26188266/how-to-speed-up-the-force-layout-animation-in-d3-js
+
+// function start() {
+//     var ticksPerRender = 3;
+//     requestAnimationFrame(function render() {
+//         for (var i = 0; i < ticksPerRender; i++) {
+//             simulation.tick();
+//         }
+//
+//         nodeGroup
+//             .selectAll(".node")
+//             .attr("cx", function(d) {return d.x;})
+//             .attr("cy", function(d) {return d.y;});
+//
+//         linkGroup
+//             .selectAll(".link")
+//             .attr("x1", function(d) {return d.source.x;})
+//             .attr("y1", function(d) {return d.source.y;})
+//             .attr("x2", function(d) {return d.target.x;})
+//             .attr("y2", function(d) {return d.target.y;});
+//
+//         if (simulation.alpha() > 0) {
+//             requestAnimationFrame(render);
+//         }
+//     });
+// }
+
 
 function ticked(){
 	// if (nodes.length > 0){
@@ -210,11 +249,6 @@ $(document).ready(function(){
 
 		io.emit('reap urls', user_input);
 		io.on('node send', function(node){
-			gfxNode = node;
-			node.level = null;
-			if (node.parent !== null){
-				node.parent.level = null;
-			}
 			updateGFX(node);
 		});
 		io.on('disconnect', function(){

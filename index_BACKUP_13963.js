@@ -3,9 +3,12 @@ var app = express();
 var http = require('http').Server(app);
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var io = require('socket.io')(http);
+<<<<<<< HEAD
 var spawn = require('child_process').spawn;
 var pythonShell = require('python-shell');
+=======
 var session = require('express-session');
+>>>>>>> bfs2
 
 var shellOptions = {
   mode: 'json',
@@ -68,41 +71,61 @@ app.post('/', function(req, res, next){
 
 
 //reaper is the scraper nightmare
-// var reaper = require('./scraper/nightmare');
+var reaper = require('./scraper/nightmare');
 
 //scrapman?
-// var scrapman = require('./scraper/scrapman');
+var scrapman = require('./scraper/scrapman');
 
 io.on('connect', function(socket){
   console.log('socket: user connected to socket.io');
   var shell = null;
   socket.on('reap urls', function(start_node){
+<<<<<<< HEAD
     console.log('reaping...');
-    session.url_history.push(start_node);
     shellOptions.args = [start_node.url];
     shell = new pythonShell('multithreaded.py', shellOptions);
+    // pythonShell.run('multithreaded.py', shellOptions, function(err, results){
+    //   if (err) throw err;
+    //   var j = JSON.parse(results.toString());
+    //   console.log(j);
+    // });
+
     shell.on('message', function(message){
-      console.log(message);
       socket.emit('node send', message);
     });
-    shell.on('error', function(err){
-      console.log(err);
-    });
 
+    // var scraper = spawn('./virtualenv/bin/python',
+    //     ['./scraper/multithreaded.py', start_node.url]);
+    // var json_string = '';
+    // scraper.stdout.on('data', function(d){
+    //   json_string += d.toString();
+    //   //socket.emit('node send',JSON.parse(JSON.stringify(d.toString())));
+    // });
+    // scraper.stdout.on('end', function(){
+    //   var j = JSON.parse(JSON.stringify(json_string));
+    //   for (var k in j){
+    //     console.log(k);
+    //   }
+    //   json = '';
+    // });
+=======
+    // console.log('reaping...');
+    
+    session.url_history.push(start_node);
+    
     // scrapman(socket, start_node, 2);
-	
+>>>>>>> bfs2
   });
   socket.on('disconnect', function(){
-    //need to kill children
     if (shell){
-      shell.childProcess.kill('SIGINT');
+      shell.end();
     }
   	console.log('user disconnected');
   });
-  // process.on('SIGINT', function() {
-  //   socket.close();
-  //   process.exit();
-  // });
+  process.on('SIGINT', function() {
+  socket.close();
+  process.exit();
+});
 });
 
 
