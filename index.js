@@ -7,12 +7,7 @@ var spawn = require('child_process').spawn;
 var pythonShell = require('python-shell');
 var session = require('express-session');
 
-var shellOptions = {
-  mode: 'json',
-  pythonPath: './virtualenv/bin/python',
-  pythonOptions: ['-u'],
-  scriptPath: './scraper'
-};
+
 
 //setup handlebars
 app.engine('handlebars', handlebars.engine);
@@ -66,32 +61,38 @@ app.post('/', function(req, res, next){
   }
 });
 
-
-//reaper is the scraper nightmare
-// var reaper = require('./scraper/nightmare');
-
-//scrapman?
-// var scrapman = require('./scraper/scrapman');
+var shellOptions = {
+    mode: 'json',
+    pythonPath: './virtualenv/bin/python',
+    pythonOptions: ['-u'],
+    scriptPath: './scraper'
+};
 
 io.on('connect', function(socket){
   console.log('socket: user connected to socket.io');
   var shell = null;
+
   socket.on('reap urls', function(start_node){
-    console.log('reaping...');
+
+    console.log('reaping urls...');
     session.url_history.push(start_node);
-    shellOptions.args = [start_node.url];
+
+    shellOptions.args = [
+        start_node.url, start_node.max_levels, start_node.keyword
+    ];
     shell = new pythonShell('multithreaded.py', shellOptions);
     shell.on('message', function(message){
+      if (message.keyword){
+        shell.childProcess.kill('SIGINT');
+      }
       console.log(message);
       socket.emit('node send', message);
     });
     shell.on('error', function(err){
       console.log(err);
     });
-
-    // scrapman(socket, start_node, 2);
-	
   });
+
   socket.on('disconnect', function(){
     //need to kill children
     if (shell){
@@ -99,10 +100,7 @@ io.on('connect', function(socket){
     }
   	console.log('user disconnected');
   });
-  // process.on('SIGINT', function() {
-  //   socket.close();
-  //   process.exit();
-  // });
+
 });
 
 
@@ -123,9 +121,7 @@ app.use(function(err, req, res, next){
   process.exit();
 });
 
-// app.listen(app.get('port'), function(){
-//   console.log('Express started on http://localhost:' + app.get('port') + '; press Ctrl-C to terminate.');
-// });
+
 
 http.listen(app.get('port'), function(){
   console.log('Express started on http://localhost:' + app.get('port') + '; press Ctrl-C to terminate.');

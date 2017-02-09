@@ -2,54 +2,6 @@
  * Created by ev on 1/24/17.
  */
 
-
-// (function(t,n){
-//     if ("object"==typeof exports && "undefined" != typeof module) {
-// 	    n(exports)
-//     }
-//     else {
-// 	    if ("function"==typeof define && define.amd) {
-// 		    define(["exports"], n)
-// 	    }
-// 	    else {
-// 		    n(t.d3=t.d3||{})
-// 	    }
-//     }
-// })
-// (this,
-//     function(t){
-//         "use strict";
-//     }
-//     function n(t){
-//         return function(n,e){
-//             return Ms(t(n),e)
-//         }
-//     }
-// );
-
-//inspired by - http://stackoverflow.com/questions/11400241/updating-links-on-a-force-directed-graph-from-dynamic-json-data
-//inspired by - http://jsfiddle.net/2Dvws/
-
-// function getParent(root, id){
-// 	var children = root.children;
-// 	if (children){
-// 		for (var key in children){
-// 			if(children[k].id == id){
-// 				return children[k]
-// 			}
-// 			else if (children[k].children){
-// 				return getObj(children[k], id);
-// 			}
-// 		}
-// 	}
-// }
-//
-// function addNode(nodes, node){
-// 	var parent = getParent(nodes[0], node.parent);
-// 	parent.push(node);
-// }
-
-
 //set size of viewport
 var width = 960,
 	height = 500;
@@ -61,33 +13,86 @@ var nodes = [],
 //setup variables
 var simulation, svg, g, linkGroup, nodeGroup;
 
-//setup viewport with width and height
-svg = d3.select('section')
-	.append('svg')
-	.attr('width', width)
-	.attr('height', height);
+var numTicks = 0;
+var ticksToSkip = 0;
 
-//setup groups
-g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-linkGroup = g.append("g");
-nodeGroup = g.append("g");
+var tip = d3.tip()
+    .attr('class', 'd3-tip')
+    .offset([-10, 0])
+    .html(function(d){
+        return "<strong>URL:</strong> <span style='color:red'>" + d.url + "</span>"
+    });
 
+function setupGFX(){
 
+    //setup viewport with width and height
+    svg = d3.select('section')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+		.call(tip);
+
+    //setup groups
+    g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+    linkGroup = g.append("g");
+    nodeGroup = g.append("g");
+
+    //setup force layout template
+    simulation = d3.forceSimulation(nodes)
+        .force("charge", d3.forceManyBody().strength(-10))
+        .force("link", d3.forceLink().id(function(d) { return d.url; }).distance(90))
+        .force("x", d3.forceX(0).strength(0.02))
+        .force("y", d3.forceY(0).strength(0.02))
+        .on("tick", function(){
+            if (numTicks > ticksToSkip){
+                ticked();
+                numTicks = 0;
+            }
+            else {
+                numTicks += 1;
+            }
+        });
+}
+
+function clearGFX(){
+	svg.remove();
+	nodes = [];
+	links = [];
+}
 
 function addNode(node, nodes, group){
 	nodes.push(node);
+
+	var fill = 'white';
+	if (node.keyword){
+		fill = 'red';
+	}
+
 	group
 		.append('circle')
 		.attr("r", 10)
 		.attr('class', 'node')
-		.attr('fill', 'white')
+		.attr('fill', fill)
 		.datum(node)
 		.call(
 			d3.drag()
 				.on("start", startDrag)
 				.on("drag", drag)
 				.on("end", endDrag)
-		);
+		)
+        .on("mouseover", tip.show)
+		.on("mouseout", tip.hide)
+		.on("dblclick", function(d){
+			window.open(d.url);
+		})
+		.on("click", function(){
+			d3.select(this)
+				.style('stroke', 'white')
+				.style('stroke-width', 5)
+				.style('fill', 'grey')
+				.style('fill-opacity', 0.2)
+				.attr('r', 20)
+		})
 }
 
 //https://roshansanthosh.wordpress.com/2016/09/25/forces-in-d3-js-v4/
@@ -131,24 +136,9 @@ function addLink(link_start, link_end, links, group){
 // 	nodes[0].fy = 0;
 // }
 
-var numTicks = 0;
-var ticksToSkip = 3;
 
-//setup force layout template
-simulation = d3.forceSimulation(nodes)
-	.force("charge", d3.forceManyBody().strength(-1))
-	.force("link", d3.forceLink().id(function(d) { return d.url; }).distance(100))
-	// .force("x", d3.forceX(width / 2))
-	// .force("y", d3.forceY(height / 2))
-	.on("tick", function(){
-		if (numTicks > ticksToSkip){
-			ticked();
-            numTicks = 0;
-		}
-		else {
-            numTicks += 1;
-        }
-    });
+
+
 
 function findParent(parent, links){
 	return links.filter(function(e){
@@ -229,29 +219,39 @@ function ticked(){
 
 
 //use socket io to update GFX real time BABY!
-var io;
+var socket = null;
 $(document).ready(function(){
 	$('#crawl-form').on('submit', function(e){
-		e.preventDefault();
+        e.preventDefault();
+        if (svg){
+			clearGFX();
+		}
+		setupGFX();
 		console.log('socketio: connecting to server');
-		io = io.connect({
+
+		if (socket){
+			console.log('socketio: already connected, forming new connection');
+			socket.disconnect();
+		}
+
+		socket = io.connect({
 			reconnection: false
 		});
 
 		var user_input = {};
 		user_input.url = $('#url').val();
-		user_input.search_term = $('#search_term').val();
-		user_input.levels = $('#levels').val();
+		user_input.keyword = $('#search_term').val();
+		user_input.max_levels = $('#levels').val();
 		user_input.crawl_type = $('#crawl_type').val();
 		user_input.level = 0;
 		user_input.parent = null;
 		// setupGFX(user_input);
 
-		io.emit('reap urls', user_input);
-		io.on('node send', function(node){
+		socket.emit('reap urls', user_input);
+		socket.on('node send', function(node){
 			updateGFX(node);
 		});
-		io.on('disconnect', function(){
+		socket.on('disconnect', function(){
 			console.log('server disconnected');
 		});
 	});

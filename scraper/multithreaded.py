@@ -1,21 +1,24 @@
 import threading
+from bs4 import UnicodeDammit
 from queue import Queue
 import requests
 from lxml import html
 import sys
 import json
+from time import sleep
 
-NUM_THREADS = 500
+NUM_THREADS = 50
 
 class Scraper(threading.Thread):
 
-    def __init__(self, unvisited, visited, visited_lock, max_level):
+    def __init__(self, unvisited, visited, visited_lock, max_levels, keyword):
 
         super(Scraper, self).__init__()
         self.unvisited = unvisited
         self.visited = visited
         self.visited_lock = visited_lock
-        self.max_level = max_level
+        self.max_levels = max_levels
+        self.keyword = keyword
 
     def _getLink(self):
 
@@ -44,28 +47,44 @@ class Scraper(threading.Thread):
         for link in links:
             self.unvisited.put(link)
 
+    def _getLinks(self, tree):
+        anchors = tree.cssselect("a")
+        links = list()
+        for a in anchors:
+            links.append(a.get('href'))
+        return links
+
+    def _findKeyword(self, tree):
+        if self.keyword in tree.xpath("string()"):
+            return True
+        return False
+
     def run(self):
         while True:
             link = self._getLink()
             if link is not None:
                 r = requests.get(link.get('url'))
                 if r.status_code == 200:
-                    print(json.dumps(link))
-                    tree = html.fromstring(r.content)
+                    damn_html = UnicodeDammit(r.content)
+                    tree = html.fromstring(damn_html.unicode_markup)
                     tree.make_links_absolute(link.get('url'))
-
-                    if link.get('level') < max_level:
-                        anchors = tree.cssselect("a")
-                        hrefs = list()
-                        for a in anchors:
-                            hrefs.append(a.get('href'))
-                        self._addLinks(hrefs, link)
+                    link['keyword'] = False
+                    if len(self.keyword) != 0 and self._findKeyword(tree):
+                        # trigger script interrupt with keyword
+                        link['keyword'] = True
+                    print(json.dumps(link))
+                    if link.get('level') < int(self.max_levels):
+                        links = self._getLinks(tree)
+                        self._addLinks(links, link)
             self.unvisited.task_done()
 
 
 if __name__ == "__main__":
 
-    start_url = "http://www.google.com"
+    start_url = sys.argv[1]
+    max_levels = sys.argv[2]
+    keyword = sys.argv[3]
+
 
     visited_lock = threading.RLock()
     visited_links = set()
@@ -78,9 +97,8 @@ if __name__ == "__main__":
     first_link['level'] = 0
     unvisited_links.put(first_link)
 
-    max_level = 2
     for t in range(NUM_THREADS):
-        s = Scraper(unvisited_links, visited_links, visited_lock, max_level)
+        s = Scraper(unvisited_links, visited_links, visited_lock, max_levels, keyword)
         s.daemon = True
         s.start()
         threads.append(s)

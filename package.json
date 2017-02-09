@@ -20,6 +20,7 @@
     "body-parser": "^1.15.2",
     "casper": "^0.1.1",
     "cheerio": "^0.22.0",
+    "d3-tip": "^0.7.1",
     "express": "^4.14.0",
     "express-handlebars": "^3.0.0",
     "express-session": "^1.15.0",
