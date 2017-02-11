@@ -156,7 +156,7 @@ function getNodes(root){
 	var nodes = [];
 	function recurse(node) {
         if (node.children) node.children.forEach(recurse);
-        nodes.push(node.data)
+        nodes.push(node)
     }
 	recurse(root);
 	return nodes;
@@ -181,10 +181,10 @@ function getLinks(root){
     function recurse(node) {
         if (node.children) node.children.forEach(recurse);
         if (node.parent){
-            links.push({source: node.parent.data, target: node.data});
+            links.push({source: node.parent, target: node});
         }
         else {
-            links.push({source: node.data, target: node.data});
+            links.push({source: node, target: node});
         }
     }
     recurse(root);
@@ -197,9 +197,8 @@ function addToGFX(node){
     //     updateXY(root, hierarchy);
     // }
     root = addNodeToData(root, node);
-    hierarchy = d3.hierarchy(root);
-    var nodes = getNodes(hierarchy);
-    var links = getLinks(hierarchy);
+    var nodes = getNodes(root);
+    var links = getLinks(root);
 
     linkSvg = linkGroup.selectAll(".link")
         .data(links);
@@ -215,9 +214,7 @@ function addToGFX(node){
     // linkSvg = linkEnter.merge(linkSvg);
 
     nodeSvg = nodeGroup.selectAll(".node")
-        .data(nodes, function(d){
-        	return d.data;
-		});
+        .data(nodes);
 
     nodeSvg.exit().remove();
 
