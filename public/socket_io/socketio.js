@@ -12,16 +12,17 @@ var nodes = [],
 
 //setup variables
 var simulation, svg, g, linkGroup, nodeGroup;
+var svgLinks, svgNodes;
 
 var numTicks = 0;
 var ticksToSkip = 0;
 
-var tip = d3.tip()
-    .attr('class', 'd3-tip')
-    .offset([-10, 0])
-    .html(function(d){
-        return "<strong>URL:</strong> <span style='color:red'>" + d.url + "</span>"
-    });
+// var tip = d3.tip()
+//     .attr('class', 'd3-tip')
+//     .offset([-10, 0])
+//     .html(function(d){
+//         return "<strong>URL:</strong> <span style='color:red'>" + d.url + "</span>"
+//     });
 
 function setupGFX(){
 
@@ -30,7 +31,7 @@ function setupGFX(){
         .append('svg')
         .attr('width', width)
         .attr('height', height)
-		.call(tip);
+		// .call(tip);
 
     //setup groups
     g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
@@ -40,7 +41,7 @@ function setupGFX(){
     //setup force layout template
     simulation = d3.forceSimulation(nodes)
         .force("charge", d3.forceManyBody().strength(-10))
-        .force("link", d3.forceLink().id(function(d) { return d.url; }).distance(90))
+        .force("link", d3.forceLink().id(function(d) { return d.id; }).distance(90))
         .force("x", d3.forceX(0).strength(0.02))
         .force("y", d3.forceY(0).strength(0.02))
         .on("tick", function(){
@@ -112,13 +113,12 @@ function onNodeClick(data){
 
 var root;
 
-function addToHierarchy(node){
-    var child = d3.hierarchy({'url': node.url});
+function addNodeToData(root, node){
+    var child = {'url': node.url};
     if(node.parent == null){
 		root = child;
-		root.data.fx = 0;
-		root.data.fy = 0;
-		addLink(root, root, linkGroup);
+		root.fx = 0;
+		root.fy = 0;
 	}
 	else {
         var parent = findParent(root, node.parent.url);
@@ -129,15 +129,13 @@ function addToHierarchy(node){
 		if (!parent.children){
 			parent.children = [];
 		}
-		child.parent = parent;
 		parent.children.push(child);
-		addLink(parent, child, linkGroup);
 	}
-	addNode(child, nodeGroup)
+	return root;
 }
 
 function findParent(root, parent_url){
-	if (root.data.url == parent_url){
+	if (root.url == parent_url){
 		return root;
 	}
 	else if (root.children){
@@ -154,28 +152,134 @@ function findParent(root, parent_url){
 
 // https://jsfiddle.net/t4vzg650/6/
 // flatten hierarchical data into array
-function flatten(root){
+function getNodes(root){
 	var nodes = [];
 	function recurse(node) {
         if (node.children) node.children.forEach(recurse);
-        nodes.push(node)
+        nodes.push(node.data)
     }
 	recurse(root);
 	return nodes;
 }
 
+var nodeSvg, linkSvg, nodeEnter, linkEnter;
 
+var hierarchy;
+
+// function updateXY(root, hierarchy){
+// 	root.x = hierarchy.x;
+// 	root.y = hierarchy.y;
+// 	if (root.children) {
+// 		for (var i=0; i<root.children.length; i++){
+// 			updateXY(root.children[i], hierarchy.children[i]);
+// 		}
+// 	}
+// }
+
+function getLinks(root){
+    var links = [];
+    function recurse(node) {
+        if (node.children) node.children.forEach(recurse);
+        if (node.parent){
+            links.push({source: node.parent.data, target: node.data});
+        }
+        else {
+            links.push({source: node.data, target: node.data});
+        }
+    }
+    recurse(root);
+    return links;
+}
 
 function addToGFX(node){
-    addToHierarchy(node);
-    var nodes = flatten(root);
-    var links = root.links();
+
+    // if (node.parent != null){
+    //     updateXY(root, hierarchy);
+    // }
+    root = addNodeToData(root, node);
+    hierarchy = d3.hierarchy(root);
+    var nodes = getNodes(hierarchy);
+    var links = getLinks(hierarchy);
+
+    linkSvg = linkGroup.selectAll(".link")
+        .data(links);
+
+    linkSvg.exit().remove();
+
+    var linkEnter = linkSvg.enter()
+        .append("line")
+        .attr('class', 'link')
+        .attr('stroke', 'white')
+        .attr('stroke-width', 1);
+
+    // linkSvg = linkEnter.merge(linkSvg);
+
+    nodeSvg = nodeGroup.selectAll(".node")
+        .data(nodes, function(d){
+        	return d.data;
+		});
+
+    nodeSvg.exit().remove();
+
+    var nodeEnter = nodeSvg.enter()
+        .append("circle")
+		.attr("r", 10)
+		.attr('fill', 'white')
+        .attr("class", "node")
+        // .on("click", click)
+        .call(d3.drag()
+            .on("start", startDrag)
+            .on("drag", drag)
+            .on("end", endDrag));
+
+
+    // nodeSvg = nodeEnter.merge(nodeSvg);
+
+    // svgLinks = linkGroup.selectAll(".link")
+		// .data(links, function(d){
+		// 	return d.target.url;
+		// })
+		// .exit()
+		// .remove()
+		// .enter()
+		// .append("line")
+    //     .attr('class', 'link')
+    //     .attr('stroke', 'white')
+    //     .attr('stroke-width', 1)
+		// .merge(svgLinks);
+    //
+    // svgNodes = nodeGroup.selectAll(".node")
+		// .data(nodes, function(d){
+		// 	return d.url;
+		// })
+		// .exit()
+		// .remove()
+		// .enter()
+    //     .append('circle')
+    //     .attr("r", 10)
+    //     .attr('class', 'node')
+    //     .attr('fill', fill)
+    //     .call(
+    //         d3.drag()
+    //             .on("start", startDrag)
+    //             .on("drag", drag)
+    //             .on("end", endDrag)
+    //     )
+    //     .on("mouseover", tip.show)
+    //     .on("mouseout", tip.hide)
+    //     .on("dblclick", function(d){
+    //         window.open(d.url);
+    //     })
+    //     .on("click", function(d){
+    //         onNodeClick(d)
+    //     })
+		// .merge(svgNodes);
+
     simulation.nodes(nodes);
     simulation.force("link").links(links);
     simulation.alpha(1).restart();
-    // console.log("links");
-    // console.log(links);
     // console.log(root);
+    // console.log(nodes);
     // console.log(links);
 }
 
