@@ -60,8 +60,16 @@ function clearGFX(){
 	links = [];
 }
 
-function addNode(node, nodes, group){
-	nodes.push(node);
+function addLink(link_start, link_end, group){
+    group
+        .append('line')
+        .attr('class', 'link')
+        .attr('stroke', 'white')
+        .attr('stroke-width', 1)
+        .datum({source: link_start, target: link_end});
+}
+
+function addNode(node, group){
 
 	var fill = 'white';
 	if (node.keyword){
@@ -85,15 +93,113 @@ function addNode(node, nodes, group){
 		.on("dblclick", function(d){
 			window.open(d.url);
 		})
-		.on("click", function(){
-			d3.select(this)
-				.style('stroke', 'white')
-				.style('stroke-width', 5)
-				.style('fill', 'grey')
-				.style('fill-opacity', 0.2)
-				.attr('r', 20)
-		})
+		.on("click", function(d){
+			onNodeClick(d)
+		});
+		// .on("click", function(){
+		// 	d3.select(this)
+		// 		.style('stroke', 'white')
+		// 		.style('stroke-width', 5)
+		// 		.style('fill', 'grey')
+		// 		.style('fill-opacity', 0.2)
+		// 		.attr('r', 20)
+		// })
 }
+
+function onNodeClick(data){
+
+}
+
+var root;
+
+function addToHierarchy(node){
+    var child = d3.hierarchy({'url': node.url});
+    if(node.parent == null){
+		root = child;
+		root.data.fx = 0;
+		root.data.fy = 0;
+		addLink(root, root, linkGroup);
+	}
+	else {
+        var parent = findParent(root, node.parent.url);
+        if (parent == null){
+        	console.log(node);
+        	console.log(node.parent);
+		}
+		if (!parent.children){
+			parent.children = [];
+		}
+		child.parent = parent;
+		parent.children.push(child);
+		addLink(parent, child, linkGroup);
+	}
+	addNode(child, nodeGroup)
+}
+
+function findParent(root, parent_url){
+	if (root.data.url == parent_url){
+		return root;
+	}
+	else if (root.children){
+		for (var i=0; i<root.children.length; i++){
+			var parent = findParent(root.children[i], parent_url);
+			if (parent != null){
+				return parent;
+			}
+		}
+	}
+	return null;
+}
+
+
+// https://jsfiddle.net/t4vzg650/6/
+// flatten hierarchical data into array
+function flatten(root){
+	var nodes = [];
+	function recurse(node) {
+        if (node.children) node.children.forEach(recurse);
+        nodes.push(node)
+    }
+	recurse(root);
+	return nodes;
+}
+
+
+
+function addToGFX(node){
+    addToHierarchy(node);
+    var nodes = flatten(root);
+    var links = root.links();
+    simulation.nodes(nodes);
+    simulation.force("link").links(links);
+    simulation.alpha(1).restart();
+    // console.log("links");
+    // console.log(links);
+    // console.log(root);
+    // console.log(links);
+}
+
+// //inspired by - https://gist.github.com/mbostock/1095795
+// function addToGFX(node){
+//
+//     addNode(node, nodes, nodeGroup);
+//     if (node.parent === null){
+//         //fix root node
+//         nodes[0].fx = 0;
+//         nodes[0].fy = 0;
+//         node.parent = null;
+//     }
+//     var parent = findParent(node.parent, nodes);
+//
+//     addLink(parent, node, links, linkGroup);
+//
+//
+//     simulation.nodes(nodes);
+//     simulation.force("link").links(links);
+//     simulation.alpha(1).restart();
+//     // console.log(links.toString());
+//     // console.log(nodes);
+// }
 
 //https://roshansanthosh.wordpress.com/2016/09/25/forces-in-d3-js-v4/
 function startDrag(d)
@@ -117,15 +223,7 @@ function endDrag(d)
 	simulation.alphaTarget(0.1);
 }
 
-function addLink(link_start, link_end, links, group){
-	links.push({source: link_start, target: link_end});
-	group
-		.append('line')
-		.attr('class', 'link')
-		.attr('stroke', 'white')
-		.attr('stroke-width', 1)
-		.datum({source: link_start, target: link_end});
-}
+
 
 // function setupGFX(start){
 // 	addNode(start, nodes, nodeGroup);
@@ -140,64 +238,22 @@ function addLink(link_start, link_end, links, group){
 
 
 
-function findParent(parent, links){
-	return links.filter(function(e){
-		if (e.url == parent.url){
-			return e;
-		}
-	})[0];
-}
-
-
-//inspired by - https://gist.github.com/mbostock/1095795
-function updateGFX(node){
-
-	addNode(node, nodes, nodeGroup);
-	if (node.parent === null){
-		//fix root node
-		nodes[0].fx = 0;
-		nodes[0].fy = 0;
-		node.parent = node;
-	}
-	var parent = findParent(node.parent, nodes);
-
-	addLink(parent, node, links, linkGroup);
-
-
-	simulation.nodes(nodes);
-	simulation.force("link").links(links);
-	simulation.alpha(1).restart();
-	// console.log(links.toString());
-	// console.log(nodes);
-}
-
-//performance code from http://stackoverflow.com/questions/26188266/how-to-speed-up-the-force-layout-animation-in-d3-js
-
-// function start() {
-//     var ticksPerRender = 3;
-//     requestAnimationFrame(function render() {
-//         for (var i = 0; i < ticksPerRender; i++) {
-//             simulation.tick();
-//         }
-//
-//         nodeGroup
-//             .selectAll(".node")
-//             .attr("cx", function(d) {return d.x;})
-//             .attr("cy", function(d) {return d.y;});
-//
-//         linkGroup
-//             .selectAll(".link")
-//             .attr("x1", function(d) {return d.source.x;})
-//             .attr("y1", function(d) {return d.source.y;})
-//             .attr("x2", function(d) {return d.target.x;})
-//             .attr("y2", function(d) {return d.target.y;});
-//
-//         if (simulation.alpha() > 0) {
-//             requestAnimationFrame(render);
-//         }
-//     });
+// function findParent(parent, links){
+// 	return links.filter(function(e){
+// 		if (e.url == parent.url){
+// 			return e;
+// 		}
+// 	})[0];
 // }
 
+
+
+
+
+
+
+
+//performance code from http://stackoverflow.com/questions/26188266/how-to-speed-up-the-force-layout-animation-in-d3-js
 
 function ticked(){
 	// if (nodes.length > 0){
@@ -249,7 +305,7 @@ $(document).ready(function(){
 
 		socket.emit('reap urls', user_input);
 		socket.on('node send', function(node){
-			updateGFX(node);
+			addToGFX(node);
 		});
 		socket.on('disconnect', function(){
 			console.log('server disconnected');
