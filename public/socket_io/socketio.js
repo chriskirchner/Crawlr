@@ -10,6 +10,8 @@ var width = 960,
 var nodes = [],
 	links = [];
 
+var root;
+
 //setup variables
 var simulation, svg, g, linkGroup, nodeGroup;
 var svgLinks, svgNodes;
@@ -17,7 +19,7 @@ var svgLinks, svgNodes;
 var numTicks = 0;
 var ticksToSkip = 0;
 
-var MAX_NODES = 100;
+var MAX_NODES = 25;
 var NODE_RADIUS = 8;
 
 var tip = d3.tip()
@@ -46,7 +48,7 @@ function setupGFX(){
     //setup force layout template
     simulation = d3.forceSimulation(nodes)
         .force("charge", d3.forceManyBody().strength(-10))
-        .force("link", d3.forceLink().id(function(d) { return d.id; }).distance(90))
+        .force("link", d3.forceLink().distance(90))
         .force("x", d3.forceX(0).strength(0.005))
         .force("y", d3.forceY(0).strength(0.005))
         .on("tick", function(){
@@ -66,55 +68,6 @@ function clearGFX(){
 	links = [];
 	root = null;
 }
-
-function addLink(link_start, link_end, group){
-    group
-        .append('line')
-        .attr('class', 'link')
-        .attr('stroke', 'white')
-        .attr('stroke-width', 1)
-        .datum({source: link_start, target: link_end});
-}
-
-// function addNode(node, group){
-//
-// 	var fill = 'white';
-// 	if (node.keyword){
-// 		fill = 'red';
-// 	}
-//
-// 	group
-// 		.append('circle')
-// 		.attr("r", 10)
-// 		.attr('class', 'node')
-// 		.attr('fill', fill)
-// 		.datum(node)
-// 		.call(
-// 			d3.drag()
-// 				.on("start", startDrag)
-// 				.on("drag", drag)
-// 				.on("end", endDrag)
-// 		)
-//         .on("mouseover", tip.show)
-// 		.on("mouseout", tip.hide)
-// 		.on("dblclick", function(d){
-// 			window.open(d.url);
-// 		})
-// 		.on("click", function(d){
-// 			onNodeClick(d)
-// 		});
-		// .on("click", function(){
-		// 	d3.select(this)
-		// 		.style('stroke', 'white')
-		// 		.style('stroke-width', 5)
-		// 		.style('fill', 'grey')
-		// 		.style('fill-opacity', 0.2)
-		// 		.attr('r', 20)
-		// })
-// }
-
-
-var root;
 
 
 function addToTree(root, node){
@@ -251,7 +204,7 @@ function trimTree(root, nodes){
                 //     .attr('r', function(d){
                 //         return powerScale(d._child_count) + NODE_RADIUS;
                 //     })
-                // p = p.parent;
+                p = p.parent;
 			}
 		}
 	}
@@ -272,12 +225,12 @@ function getTimes(nodes){
 }
 
 var powerScale = d3.scalePow()
-// .domain([0, MAX_NODES])
-// .range([NODE_RADIUS, 50]);
+// // .domain([0, MAX_NODES])
+// // .range([NODE_RADIUS, 50]);
     .exponent(0.5);
 
 function updateGFX(root){
-	var nodes = getNodes(root);
+    var nodes = getNodes(root);
     if (nodes.length > MAX_NODES){
         trimTree(root, nodes);
 		nodes = getNodes(root);
@@ -297,32 +250,29 @@ function updateGFX(root){
         .attr('stroke', 'white')
         .attr('stroke-width', 1);
 
-    linkSvg = linkEnter.merge(linkSvg);
+    //linkSvg = linkEnter.merge(linkSvg);
 
 	nodeSvg = nodeGroup.selectAll('.node')
-		.data(nodes, function(d){
-			return d.url
-		});
+		.data(nodes);
 
 	nodeSvg.exit().remove();
 
-    nodeSvg
+    var nodeEnter = nodeSvg
         .enter()
         .append("circle")
-        // .attr('r', function(d){
-        	// if (d._children.length == 0){
-        	// 	return NODE_RADIUS;
-		// 	}
-		// 	return powerScale(d._child_count)+NODE_RADIUS;
-		// })
-        // .style('fill', function(d){
-        	// if (d._children.length == 0){
-        	// 	return 'white';
-		// 	}
-		// 	return 'grey';
-		// })
-		.attr('r', NODE_RADIUS)
-		.style('fill', 'white')
+		.attr('r', function(d){
+			if (d._children.length == 0){
+				return NODE_RADIUS
+			}
+			return powerScale(d._child_count)+NODE_RADIUS;
+		})
+		.style('fill', function(d){
+			if (d._children.length == 0){
+				return 'white'
+			}
+			return 'grey'
+		})
+		
         .attr("class", "node")
         .attr('href', function(d){
             return d.url;
@@ -358,11 +308,6 @@ function click(d){
 		hidden += nodes[i]._children.length;
 		shown += nodes[i].children.length;
 	}
-	console.log(nodes.length);
-	console.log(hidden);
-	console.log(shown);
-	console.log(nodes);
-
 
 	if (d._children.length == 0
 		&& d.children.length == 0){

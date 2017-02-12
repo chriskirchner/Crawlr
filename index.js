@@ -85,7 +85,7 @@ io.on('connect', function(socket){
     var i = 0;
     shell.on('message', function(message){
       //debuggng with 100 nodes
-      if (i++ >= 500){
+      if (i++ >= 50){
         message.keyword = true;
       }
       if (message.keyword){
