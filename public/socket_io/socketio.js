@@ -19,7 +19,7 @@ var svgLinks, svgNodes;
 var numTicks = 0;
 var ticksToSkip = 0;
 
-var MAX_NODES = 25;
+var MAX_NODES = 50;
 var NODE_RADIUS = 8;
 
 var tip = d3.tip()
@@ -146,10 +146,8 @@ function findParent(root, parent_url){
 function getNodes(root){
 	var nodes = [];
 	function recurse(node) {
-        if (node.children) {
-        	node.children.forEach(recurse);
-        }
-        nodes.push(node)
+        if (node.children) node.children.forEach(recurse);
+        nodes.push(node);
     }
 	recurse(root);
 	return nodes;
@@ -175,6 +173,7 @@ function getLinks(root){
 function addToGFX(node){
     root = addToTree(root, node);
     updateGFX(root);
+    restyleGFX(root);
     simulation.alpha(1).restart();
 }
 
@@ -182,7 +181,7 @@ function addToGFX(node){
 var powerScale = d3.scalePow()
 // // .domain([0, MAX_NODES])
 // // .range([NODE_RADIUS, 50]);
-    .exponent(1);
+    .exponent(0.5);
 
 //post-order traversal
 function trimTree(root, nodes){
@@ -205,15 +204,15 @@ function trimTree(root, nodes){
 				p._child_count++;
                 //grow parent radius
                 // d3.select('[href="'+p.url+'"]')
-                //     .attr('r', function(d){
-                //         return powerScale(d._child_count) + NODE_RADIUS;
-                //     });
+                // styleSuperNode('[href="'+p.url+'"]');
                 p = p.parent;
 			}
 		}
 	}
 	recurse(root);
 }
+
+
 
 function getTrimTime(nodes){
 	var times = getTimes(nodes);
@@ -244,18 +243,17 @@ function updateGFX(root){
         .data(links);
 
     linkSvg.exit().remove();
-
     var linkEnter = linkSvg.enter()
         .append("line")
         .attr('class', 'link')
         .attr('stroke', 'white')
         .attr('stroke-width', 1);
 
-    //linkSvg = linkEnter.merge(linkSvg);
+    linkSvg = linkEnter.merge(linkSvg);
 
 	nodeSvg = nodeGroup.selectAll('.node')
 		.data(nodes, function(d){
-			return d;
+			return d.url;
 		});
 
 	nodeSvg.exit().remove();
@@ -263,23 +261,10 @@ function updateGFX(root){
     var nodeEnter = nodeSvg
         .enter()
         .append("circle")
-		.attr('r', function(d){
-			if (d._children.length == 0){
-				return NODE_RADIUS
-			}
-			return powerScale(d._child_count)+NODE_RADIUS;
-		})
-		.style('fill', function(d){
-			if (d._children.length == 0){
-				return 'white'
-			}
-			return 'grey'
-		})
-
-        .attr("class", "node")
         .attr('href', function(d){
             return d.url;
         })
+		.attr('class', 'node')
         .on("click", click)
         .on("mouseover", tip.show)
         .on("mouseout", tip.hide)
@@ -289,17 +274,60 @@ function updateGFX(root){
             .on("end", endDrag));
 
 
+    // .on("click", function(){
+    // 	d3.select(this)
+    // 		.style('stroke', 'white')
+    // 		.style('stroke-width', 5)
+    // 		.style('fill', 'grey')
+    // 		.style('fill-opacity', 0.2)
+    // 		.attr('r', 20)
+    // })
 
-
-    //nodeSvg = nodeEnter.merge(nodeSvg);
+    nodeSvg = nodeEnter.merge(nodeSvg);
 
     simulation.nodes(nodes);
     simulation.force("link").links(links);
 
+}
+
+function restyleGFX(root){
+    // function recurse(node){
+    //     if (node.children) node.children.forEach(recurse);
+    //     if (node._children.length > 0){
+    //         styleSuperNode('[href="'+node.url+'"]');
+    //     }
+    //     else {
+    //         styleRegNode('[href="'+node.url+'"]');
+    //     }
+    //
+	styleSuperNode();
+	styleRegNode();
+    // recurse(root);
+}
 
 
-    // console.log(nodes);
-    // console.log(root);
+function styleSuperNode(){
+    nodeGroup.selectAll('.node')
+		.filter(function(d){
+			return d._children.length > 0;
+		})
+        .attr('r', function(d){
+            return powerScale(d._child_count) + NODE_RADIUS
+        })
+        .style('stroke', 'white')
+        .style('stroke-width', 5)
+        .style('fill', 'grey')
+        .style('fill-opacity', 0.2);
+}
+
+function styleRegNode(){
+    var g = nodeGroup.selectAll('.node')
+		.filter(function(d){
+			return d._children.length == 0;
+		})
+        .attr('r', NODE_RADIUS)
+        .style('fill', 'white')
+		.style('fill-opacity', 1);
 }
 
 function click(d){
@@ -311,17 +339,17 @@ function click(d){
 		hidden += nodes[i]._children.length;
 		shown += nodes[i].children.length;
 	}
+    var dt = new Date();
+    d.timestamp = dt.getTime();
 
 	if (d._children.length == 0
 		&& d.children.length == 0){
 		return;
 	}
-	if (d.collapsed == true){
-        d.collapsed = false;
+	else if (d._children.length > 0){
         var child_count = d._children.length;
-		var dt = new Date();
         //update time stamps
-        d.timestamp = dt.getTime();
+		//bug here i think
 		d._children.forEach(function(child){
 			dt = new Date();
 			child.timestamp = dt.getTime();
@@ -335,13 +363,9 @@ function click(d){
             parent._child_count -= child_count;
             parent = parent.parent;
         }
-
-        // d3.select(this)
-        //     .attr('r', NODE_RADIUS);
-
     }
-	else {
-        d.collapsed = true;
+	else if (d._children == 0){
+
         var child_count = d.children.length;
 		d._children = d._children.concat(d.children);
 		d.children = [];
@@ -351,17 +375,14 @@ function click(d){
             parent._child_count += child_count;
             parent = parent.parent;
         }
-
-        // d3.select(this)
-        //     .attr('r', function(d){
-        //     	return powerScale(d._child_count);
-			// });
-	}
+    }
 
     updateGFX(root);
+	restyleGFX(root);
     simulation.alpha(1).restart();
 
 }
+
 
 
 //https://roshansanthosh.wordpress.com/2016/09/25/forces-in-d3-js-v4/
