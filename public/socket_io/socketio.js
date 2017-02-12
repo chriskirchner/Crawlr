@@ -275,7 +275,7 @@ function updateGFX(root){
 			}
 			return 'grey'
 		})
-		
+
         .attr("class", "node")
         .attr('href', function(d){
             return d.url;
