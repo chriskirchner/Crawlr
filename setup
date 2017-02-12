@@ -1,0 +1,10 @@
+#!/bin/bash
+sudo apt-get install nodejs -y
+sudo apt-get install python3.5 -y
+sudo apt-get install python3-pip -y
+pip install virtualenv
+npm install
+mkdir venv
+virtualenv -p python3.5 venv
+. ./venv/bin/activate
+pip install -r pip.txt 

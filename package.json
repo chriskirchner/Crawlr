@@ -26,6 +26,6 @@
     "python-shell": "^0.4.0",
     "scrapman": "^2.3.1",
     "socket.io": "^1.7.2",
-    "socket.io-client": "^1.7.2",
+    "socket.io-client": "^1.7.2"
   }
 }
