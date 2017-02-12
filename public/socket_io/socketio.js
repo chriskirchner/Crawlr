@@ -73,12 +73,12 @@ var num = 0;
 
 function addToTree(root, node){
 	// console.log(num++);
-    var dateTime = new Date();
-    var time = dateTime.getTime();
+    // var dateTime = new Date();
+    // var time = dateTime.getTime();
 	var parent = null;
     var child = {
     	'url': node.url,
-		'timestamp': time,
+		'timestamp': num++,
 		'children': [],
 		'_children': [],
 		'collapsed': false,
@@ -98,7 +98,8 @@ function addToTree(root, node){
 		parent.children.push(child);
         //update parents time as well
         while (parent != null){
-            parent.timestamp = time;
+            // parent.timestamp = time;
+			parent.timestamp = num++;
             parent = parent.parent;
         }
 	}
@@ -337,8 +338,9 @@ function click(d){
 		hidden += nodes[i]._children.length;
 		shown += nodes[i].children.length;
 	}
-    var dt = new Date();
-    d.timestamp = dt.getTime();
+    // var dt = new Date();
+    // d.timestamp = dt.getTime();
+	d.timestamp = num++;
 
 	if (d._children.length == 0
 		&& d.children.length == 0){
@@ -349,8 +351,9 @@ function click(d){
         //update time stamps
 		//bug here i think
 		d._children.forEach(function(child){
-			dt = new Date();
-			child.timestamp = dt.getTime();
+			// dt = new Date();
+			// child.timestamp = dt.getTime();
+			child.timestamp = num++;
 		});
 		d.children = d.children.concat(d._children);
 		d._children = [];
