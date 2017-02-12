@@ -3,11 +3,12 @@ from bs4 import UnicodeDammit
 from queue import Queue
 import requests
 from lxml import html
+import lxml
 import sys
 import json
 from time import sleep
 
-NUM_THREADS = 25
+NUM_THREADS = 200
 
 class Scraper(threading.Thread):
 
@@ -63,19 +64,28 @@ class Scraper(threading.Thread):
         while True:
             link = self._getLink()
             if link is not None:
-                r = requests.get(link.get('url'), timeout=0.5)
-                if r.status_code == 200:
-                    damn_html = UnicodeDammit(r.content)
-                    tree = html.fromstring(damn_html.unicode_markup)
-                    tree.make_links_absolute(link.get('url'))
-                    link['keyword'] = False
-                    if len(self.keyword) != 0 and self._findKeyword(tree):
-                        # trigger script interrupt with keyword
-                        link['keyword'] = True
-                    print(json.dumps(link))
-                    if link.get('level') < int(self.max_levels):
-                        links = self._getLinks(tree)
-                        self._addLinks(links, link)
+                r = None
+                try:
+                    r = requests.get(link.get('url'), timeout=0.5)
+                except requests.RequestException as e:
+                    print(e, file=sys.stderr)
+                if r is not None and r.status_code == 200:
+                    tree = None;
+                    try:
+                        damn_html = UnicodeDammit(r.content)
+                        tree = html.fromstring(damn_html.unicode_markup)
+                        tree.make_links_absolute(link.get('url'))
+                    except Exception as e:
+                        print(e, file=sys.stderr)
+                    if tree is not None:
+                        link['keyword'] = False
+                        if len(self.keyword) != 0 and self._findKeyword(tree):
+                            # trigger script interrupt with keyword
+                            link['keyword'] = True
+                        print(json.dumps(link))
+                        if link.get('level') < int(self.max_levels):
+                            links = self._getLinks(tree)
+                            self._addLinks(links, link)
             self.unvisited.task_done()
 
 

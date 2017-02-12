@@ -67,3 +67,7 @@ svg {
 	top: 100%;
 	left: 0;
 }
+
+.line {
+	shape-rendering: crispEdges;
+}

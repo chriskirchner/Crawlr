@@ -15,12 +15,14 @@ var root;
 //setup variables
 var simulation, svg, g, linkGroup, nodeGroup;
 var svgLinks, svgNodes;
+var link_count = 0;
 
 var numTicks = 0;
 var ticksToSkip = 0;
 
-var MAX_NODES = 250;
+var MAX_NODES = 350;
 var NODE_RADIUS = 8;
+var GFX_UPDATE_INTERVAL = 20;
 
 var tip = d3.tip()
     .attr('class', 'd3-tip')
@@ -75,6 +77,7 @@ function addToTree(root, node){
 	// console.log(num++);
     // var dateTime = new Date();
     // var time = dateTime.getTime();
+	console.log(link_count++);
 	var parent = null;
     var child = {
     	'url': node.url,
@@ -271,22 +274,16 @@ function updateGFX(root){
         .attr('r', NODE_RADIUS)
         .style('fill', 'white')
         .on("click", click)
+		.on('dblclick', function(d){
+			console.log('blah');
+			window.open(d.url);
+		})
         .on("mouseover", tip.show)
         .on("mouseout", tip.hide)
         .call(d3.drag()
             .on("start", startDrag)
             .on("drag", drag)
             .on("end", endDrag));
-
-
-    // .on("click", function(){
-    // 	d3.select(this)
-    // 		.style('stroke', 'white')
-    // 		.style('stroke-width', 5)
-    // 		.style('fill', 'grey')
-    // 		.style('fill-opacity', 0.2)
-    // 		.attr('r', 20)
-    // })
 
     nodeSvg = nodeEnter.merge(nodeSvg);
 
@@ -428,6 +425,21 @@ function ticked(){
 		.attr("y2", function(d) {return d.target.y;});
 }
 
+var buffer = [];
+function bufferNode(node){
+	buffer.push(node)
+}
+
+function bufferToGFX(buffer){
+	if (buffer.length > 0){
+		addToGFX(buffer[0]);
+		buffer.splice(0,1);
+	}
+}
+
+setInterval(function(){
+	bufferToGFX(buffer);
+}, GFX_UPDATE_INTERVAL);
 
 //use socket io to update GFX real time BABY!
 var socket = null;
@@ -460,7 +472,7 @@ $(document).ready(function(){
 
 		socket.emit('reap urls', user_input);
 		socket.on('node send', function(node){
-			addToGFX(node);
+			bufferNode(node)
         });
 		socket.on('disconnect', function(){
 			console.log('server disconnected');
