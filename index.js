@@ -80,8 +80,14 @@ io.on('connect', function(socket){
     shellOptions.args = [
         start_node.url, start_node.max_levels, start_node.keyword
     ];
+
     shell = new pythonShell('multithreaded.py', shellOptions);
+    var i = 0;
     shell.on('message', function(message){
+      //debuggng with 100 nodes
+      if (i++ >= 500){
+        message.keyword = true;
+      }
       if (message.keyword){
         shell.childProcess.kill('SIGINT');
       }

@@ -17,12 +17,17 @@ var svgLinks, svgNodes;
 var numTicks = 0;
 var ticksToSkip = 0;
 
-// var tip = d3.tip()
-//     .attr('class', 'd3-tip')
-//     .offset([-10, 0])
-//     .html(function(d){
-//         return "<strong>URL:</strong> <span style='color:red'>" + d.url + "</span>"
-//     });
+var MAX_NODES = 100;
+var NODE_RADIUS = 8;
+
+var tip = d3.tip()
+    .attr('class', 'd3-tip')
+    .offset([-10, 0])
+    .html(function(d){
+        html = "<strong>URL:</strong> <span style='color:red'>" + d.url + "</span>" + "<br>" +
+            	"<strong>Count:</strong> <span style='color:red'>" + d._child_count + "</span>";
+        return html;
+    });
 
 function setupGFX(){
 
@@ -31,7 +36,7 @@ function setupGFX(){
         .append('svg')
         .attr('width', width)
         .attr('height', height)
-		// .call(tip);
+		.call(tip);
 
     //setup groups
     g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
@@ -42,8 +47,8 @@ function setupGFX(){
     simulation = d3.forceSimulation(nodes)
         .force("charge", d3.forceManyBody().strength(-10))
         .force("link", d3.forceLink().id(function(d) { return d.id; }).distance(90))
-        .force("x", d3.forceX(0).strength(0.02))
-        .force("y", d3.forceY(0).strength(0.02))
+        .force("x", d3.forceX(0).strength(0.005))
+        .force("y", d3.forceY(0).strength(0.005))
         .on("tick", function(){
             if (numTicks > ticksToSkip){
                 ticked();
@@ -59,6 +64,7 @@ function clearGFX(){
 	svg.remove();
 	nodes = [];
 	links = [];
+	root = null;
 }
 
 function addLink(link_start, link_end, group){
@@ -70,33 +76,33 @@ function addLink(link_start, link_end, group){
         .datum({source: link_start, target: link_end});
 }
 
-function addNode(node, group){
-
-	var fill = 'white';
-	if (node.keyword){
-		fill = 'red';
-	}
-
-	group
-		.append('circle')
-		.attr("r", 10)
-		.attr('class', 'node')
-		.attr('fill', fill)
-		.datum(node)
-		.call(
-			d3.drag()
-				.on("start", startDrag)
-				.on("drag", drag)
-				.on("end", endDrag)
-		)
-        .on("mouseover", tip.show)
-		.on("mouseout", tip.hide)
-		.on("dblclick", function(d){
-			window.open(d.url);
-		})
-		.on("click", function(d){
-			onNodeClick(d)
-		});
+// function addNode(node, group){
+//
+// 	var fill = 'white';
+// 	if (node.keyword){
+// 		fill = 'red';
+// 	}
+//
+// 	group
+// 		.append('circle')
+// 		.attr("r", 10)
+// 		.attr('class', 'node')
+// 		.attr('fill', fill)
+// 		.datum(node)
+// 		.call(
+// 			d3.drag()
+// 				.on("start", startDrag)
+// 				.on("drag", drag)
+// 				.on("end", endDrag)
+// 		)
+//         .on("mouseover", tip.show)
+// 		.on("mouseout", tip.hide)
+// 		.on("dblclick", function(d){
+// 			window.open(d.url);
+// 		})
+// 		.on("click", function(d){
+// 			onNodeClick(d)
+// 		});
 		// .on("click", function(){
 		// 	d3.select(this)
 		// 		.style('stroke', 'white')
@@ -105,32 +111,43 @@ function addNode(node, group){
 		// 		.style('fill-opacity', 0.2)
 		// 		.attr('r', 20)
 		// })
-}
+// }
 
-function onNodeClick(data){
-
-}
 
 var root;
 
-function addNodeToData(root, node){
-    var child = {'url': node.url};
+
+function addToTree(root, node){
+    var dateTime = new Date();
+    var time = dateTime.getTime();
+	var parent = null;
+    var child = {
+    	'url': node.url,
+		'timestamp': time,
+		'children': [],
+		'_children': [],
+		'collapsed': false,
+		'_child_count': 0
+    };
     if(node.parent == null){
 		root = child;
 		root.fx = 0;
 		root.fy = 0;
 	}
 	else {
-        var parent = findParent(root, node.parent.url);
-        if (parent == null){
-        	console.log(node);
-        	console.log(node.parent);
-		}
+        parent = findParent(root, node.parent.url);
 		if (!parent.children){
 			parent.children = [];
 		}
+		child.parent = parent;
 		parent.children.push(child);
+        //update parents time as well
+        while (parent != null){
+            parent.timestamp = time;
+            parent = parent.parent;
+        }
 	}
+
 	return root;
 }
 
@@ -138,7 +155,7 @@ function findParent(root, parent_url){
 	if (root.url == parent_url){
 		return root;
 	}
-	else if (root.children){
+	if (root.children.length > 0){
 		for (var i=0; i<root.children.length; i++){
 			var parent = findParent(root.children[i], parent_url);
 			if (parent != null){
@@ -146,8 +163,29 @@ function findParent(root, parent_url){
 			}
 		}
 	}
+	if (root._children.length > 0){
+        for (var i=0; i<root._children.length; i++){
+            var parent = findParent(root._children[i], parent_url);
+            if (parent != null){
+
+            	//make child observable if previously hidden
+                root.children.push(root._children[i]);
+            	root._children.splice(i, 1);
+
+            	p = root;
+            	while (p != null){
+            		p._child_count--;
+            		p = p.parent;
+				}
+
+                return parent;
+            }
+        }
+    }
 	return null;
 }
+
+
 
 
 // https://jsfiddle.net/t4vzg650/6/
@@ -155,7 +193,9 @@ function findParent(root, parent_url){
 function getNodes(root){
 	var nodes = [];
 	function recurse(node) {
-        if (node.children) node.children.forEach(recurse);
+        if (node.children) {
+        	node.children.forEach(recurse);
+        }
         nodes.push(node)
     }
 	recurse(root);
@@ -163,18 +203,6 @@ function getNodes(root){
 }
 
 var nodeSvg, linkSvg, nodeEnter, linkEnter;
-
-var hierarchy;
-
-// function updateXY(root, hierarchy){
-// 	root.x = hierarchy.x;
-// 	root.y = hierarchy.y;
-// 	if (root.children) {
-// 		for (var i=0; i<root.children.length; i++){
-// 			updateXY(root.children[i], hierarchy.children[i]);
-// 		}
-// 	}
-// }
 
 function getLinks(root){
     var links = [];
@@ -192,13 +220,71 @@ function getLinks(root){
 }
 
 function addToGFX(node){
+    root = addToTree(root, node);
+    updateGFX(root);
+    simulation.alpha(1).restart();
+}
 
-    // if (node.parent != null){
-    //     updateXY(root, hierarchy);
-    // }
-    root = addNodeToData(root, node);
-    var nodes = getNodes(root);
+
+
+//post-order traversal
+function trimTree(root, nodes){
+	var trimTime = getTrimTime(nodes);
+	function recurse(node){
+		if (node.children) node.children.forEach(recurse);
+		if (node.timestamp <= trimTime){
+
+			//hide node
+			if (node.parent){
+                var parent = node.parent;
+                parent._children.push(node);
+                var index = parent.children.indexOf(node);
+                parent.children.splice(index, 1);
+			}
+
+			//update total child count for parents
+			p = node.parent;
+			while(p != null){
+				p._child_count++;
+                //grow parent radius
+                // d3.select('[href="'+p.url+'"]')
+                //     .attr('r', function(d){
+                //         return powerScale(d._child_count) + NODE_RADIUS;
+                //     })
+                // p = p.parent;
+			}
+		}
+	}
+	recurse(root);
+}
+
+function getTrimTime(nodes){
+	var times = getTimes(nodes);
+	times.sort();
+	var numNodesToTrim = nodes.length - MAX_NODES;
+	return times[numNodesToTrim-1];
+}
+
+function getTimes(nodes){
+	return nodes.map(function(node){
+		return node.timestamp;
+	})
+}
+
+var powerScale = d3.scalePow()
+// .domain([0, MAX_NODES])
+// .range([NODE_RADIUS, 50]);
+    .exponent(0.5);
+
+function updateGFX(root){
+	var nodes = getNodes(root);
+    if (nodes.length > MAX_NODES){
+        trimTree(root, nodes);
+		nodes = getNodes(root);
+    }
     var links = getLinks(root);
+
+    //refactor code
 
     linkSvg = linkGroup.selectAll(".link")
         .data(links);
@@ -211,96 +297,124 @@ function addToGFX(node){
         .attr('stroke', 'white')
         .attr('stroke-width', 1);
 
-    // linkSvg = linkEnter.merge(linkSvg);
+    linkSvg = linkEnter.merge(linkSvg);
 
-    nodeSvg = nodeGroup.selectAll(".node")
-        .data(nodes);
+	nodeSvg = nodeGroup.selectAll('.node')
+		.data(nodes, function(d){
+			return d.url
+		});
 
-    nodeSvg.exit().remove();
+	nodeSvg.exit().remove();
 
-    var nodeEnter = nodeSvg.enter()
+    nodeSvg
+        .enter()
         .append("circle")
-		.attr("r", 10)
-		.attr('fill', 'white')
+        // .attr('r', function(d){
+        	// if (d._children.length == 0){
+        	// 	return NODE_RADIUS;
+		// 	}
+		// 	return powerScale(d._child_count)+NODE_RADIUS;
+		// })
+        // .style('fill', function(d){
+        	// if (d._children.length == 0){
+        	// 	return 'white';
+		// 	}
+		// 	return 'grey';
+		// })
+		.attr('r', NODE_RADIUS)
+		.style('fill', 'white')
         .attr("class", "node")
-        // .on("click", click)
+        .attr('href', function(d){
+            return d.url;
+        })
+        .on("click", click)
+        .on("mouseover", tip.show)
+        .on("mouseout", tip.hide)
         .call(d3.drag()
             .on("start", startDrag)
             .on("drag", drag)
             .on("end", endDrag));
 
 
-    // nodeSvg = nodeEnter.merge(nodeSvg);
 
-    // svgLinks = linkGroup.selectAll(".link")
-		// .data(links, function(d){
-		// 	return d.target.url;
-		// })
-		// .exit()
-		// .remove()
-		// .enter()
-		// .append("line")
-    //     .attr('class', 'link')
-    //     .attr('stroke', 'white')
-    //     .attr('stroke-width', 1)
-		// .merge(svgLinks);
-    //
-    // svgNodes = nodeGroup.selectAll(".node")
-		// .data(nodes, function(d){
-		// 	return d.url;
-		// })
-		// .exit()
-		// .remove()
-		// .enter()
-    //     .append('circle')
-    //     .attr("r", 10)
-    //     .attr('class', 'node')
-    //     .attr('fill', fill)
-    //     .call(
-    //         d3.drag()
-    //             .on("start", startDrag)
-    //             .on("drag", drag)
-    //             .on("end", endDrag)
-    //     )
-    //     .on("mouseover", tip.show)
-    //     .on("mouseout", tip.hide)
-    //     .on("dblclick", function(d){
-    //         window.open(d.url);
-    //     })
-    //     .on("click", function(d){
-    //         onNodeClick(d)
-    //     })
-		// .merge(svgNodes);
+
+    //nodeSvg = nodeEnter.merge(nodeSvg);
 
     simulation.nodes(nodes);
     simulation.force("link").links(links);
-    simulation.alpha(1).restart();
-    // console.log(root);
+
+
+
     // console.log(nodes);
-    // console.log(links);
+    // console.log(root);
 }
 
-// //inspired by - https://gist.github.com/mbostock/1095795
-// function addToGFX(node){
-//
-//     addNode(node, nodes, nodeGroup);
-//     if (node.parent === null){
-//         //fix root node
-//         nodes[0].fx = 0;
-//         nodes[0].fy = 0;
-//         node.parent = null;
-//     }
-//     var parent = findParent(node.parent, nodes);
-//
-//     addLink(parent, node, links, linkGroup);
-//
-//
-//     simulation.nodes(nodes);
-//     simulation.force("link").links(links);
-//     simulation.alpha(1).restart();
-//     // console.log(links.toString());
-//     // console.log(nodes);
-// }
+function click(d){
+
+	var nodes = getNodes(root);
+	var hidden = 0;
+	var shown = 0;
+	for (var i=0; i<nodes.length; i++){
+		hidden += nodes[i]._children.length;
+		shown += nodes[i].children.length;
+	}
+	console.log(nodes.length);
+	console.log(hidden);
+	console.log(shown);
+	console.log(nodes);
+
+
+	if (d._children.length == 0
+		&& d.children.length == 0){
+		return;
+	}
+	if (d.collapsed == true){
+        d.collapsed = false;
+        var child_count = d._children.length;
+		var dt = new Date();
+        //update time stamps
+        d.timestamp = dt.getTime();
+		d._children.forEach(function(child){
+			dt = new Date();
+			child.timestamp = dt.getTime();
+		});
+		d.children = d.children.concat(d._children);
+		d._children = [];
+
+        //update total child count for parents
+        var parent = d;
+        while(parent != null){
+            parent._child_count -= child_count;
+            parent = parent.parent;
+        }
+
+        // d3.select(this)
+        //     .attr('r', NODE_RADIUS);
+
+    }
+	else {
+        d.collapsed = true;
+        var child_count = d.children.length;
+		d._children = d._children.concat(d.children);
+		d.children = [];
+
+        var parent = d;
+        while(parent != null){
+            parent._child_count += child_count;
+            parent = parent.parent;
+        }
+
+        // d3.select(this)
+        //     .attr('r', function(d){
+        //     	return powerScale(d._child_count);
+			// });
+	}
+
+    updateGFX(root);
+    simulation.alpha(1).restart();
+
+}
+
 
 //https://roshansanthosh.wordpress.com/2016/09/25/forces-in-d3-js-v4/
 function startDrag(d)
@@ -323,36 +437,6 @@ function endDrag(d)
 	d.fy = null;
 	simulation.alphaTarget(0.1);
 }
-
-
-
-// function setupGFX(start){
-// 	addNode(start, nodes, nodeGroup);
-// 	addLink(start, start, links, linkGroup);
-//
-// 	//fix root node to center
-// 	nodes[0].fx = 0;
-// 	nodes[0].fy = 0;
-// }
-
-
-
-
-
-// function findParent(parent, links){
-// 	return links.filter(function(e){
-// 		if (e.url == parent.url){
-// 			return e;
-// 		}
-// 	})[0];
-// }
-
-
-
-
-
-
-
 
 //performance code from http://stackoverflow.com/questions/26188266/how-to-speed-up-the-force-layout-animation-in-d3-js
 
@@ -407,7 +491,7 @@ $(document).ready(function(){
 		socket.emit('reap urls', user_input);
 		socket.on('node send', function(node){
 			addToGFX(node);
-		});
+        });
 		socket.on('disconnect', function(){
 			console.log('server disconnected');
 		});
