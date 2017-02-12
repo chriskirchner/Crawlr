@@ -63,7 +63,7 @@ app.post('/', function(req, res, next){
 
 var shellOptions = {
     mode: 'json',
-    pythonPath: './virtualenv/bin/python',
+    pythonPath: './venv/bin/python',
     pythonOptions: ['-u'],
     scriptPath: './scraper'
 };
@@ -81,13 +81,13 @@ io.on('connect', function(socket){
         start_node.url, start_node.max_levels, start_node.keyword
     ];
 
-    shell = new pythonShell('multithreaded.py', shellOptions);
+    shell = new pythonShell('bfs.py', shellOptions);
     var i = 0;
     shell.on('message', function(message){
       //debuggng with 100 nodes
-      if (i++ >= 200){
-        message.keyword = true;
-      }
+      // if (i++ >= 2000){
+      //   message.keyword = true;
+      // }
       if (message.keyword){
         shell.childProcess.kill('SIGINT');
       }

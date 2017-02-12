@@ -4,7 +4,7 @@
 
 //set size of viewport
 var width = 960,
-	height = 500;
+	height = 960;
 
 //setup edge and node lists
 var nodes = [],
@@ -19,7 +19,7 @@ var svgLinks, svgNodes;
 var numTicks = 0;
 var ticksToSkip = 0;
 
-var MAX_NODES = 50;
+var MAX_NODES = 250;
 var NODE_RADIUS = 8;
 
 var tip = d3.tip()
@@ -69,8 +69,10 @@ function clearGFX(){
 	root = null;
 }
 
+var num = 0;
 
 function addToTree(root, node){
+	console.log(num++);
     var dateTime = new Date();
     var time = dateTime.getTime();
 	var parent = null;
@@ -181,7 +183,7 @@ function addToGFX(node){
 var powerScale = d3.scalePow()
 // // .domain([0, MAX_NODES])
 // // .range([NODE_RADIUS, 50]);
-    .exponent(0.5);
+    .exponent(0.6);
 
 //post-order traversal
 function trimTree(root, nodes){
