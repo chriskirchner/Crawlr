@@ -19,21 +19,13 @@
   "dependencies": {
     "body-parser": "^1.15.2",
     "casper": "^0.1.1",
-    "cheerio": "^0.22.0",
-    "d3-tip": "^0.7.1",
     "express": "^4.14.0",
     "express-handlebars": "^3.0.0",
     "express-session": "^1.15.0",
     "http": "0.0.0",
-    "nightmare": "^2.9.1",
-    "phantomjs": "^2.1.7",
     "python-shell": "^0.4.0",
-    "request": "^2.79.0",
     "scrapman": "^2.3.1",
     "socket.io": "^1.7.2",
     "socket.io-client": "^1.7.2",
-    "utils": "^0.3.1",
-    "x-ray": "^2.3.1",
-    "x-ray-phantom": "^1.0.1"
   }
 }

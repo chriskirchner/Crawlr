@@ -72,7 +72,7 @@ function clearGFX(){
 var num = 0;
 
 function addToTree(root, node){
-	console.log(num++);
+	// console.log(num++);
     var dateTime = new Date();
     var time = dateTime.getTime();
 	var parent = null;
@@ -267,6 +267,8 @@ function updateGFX(root){
             return d.url;
         })
 		.attr('class', 'node')
+        .attr('r', NODE_RADIUS)
+        .style('fill', 'white')
         .on("click", click)
         .on("mouseover", tip.show)
         .on("mouseout", tip.hide)
@@ -292,29 +294,26 @@ function updateGFX(root){
 
 }
 
-function restyleGFX(root){
-    // function recurse(node){
-    //     if (node.children) node.children.forEach(recurse);
-    //     if (node._children.length > 0){
-    //         styleSuperNode('[href="'+node.url+'"]');
-    //     }
-    //     else {
-    //         styleRegNode('[href="'+node.url+'"]');
-    //     }
-    //
-	styleSuperNode();
-	styleRegNode();
-    // recurse(root);
+function restyleGFX(root) {
+    function recurse(node) {
+        if (node.children) node.children.forEach(recurse);
+        if (node._children.length > 0) {
+            styleSuperNode('[href="' + node.url + '"]');
+            node.collapsed = true;
+        }
+        else if (node._children.length == 0 && node.collapsed == true) {
+            styleRegNode('[href="' + node.url + '"]');
+            node.collapsed = false;
+        }
+    }
+    recurse(root);
 }
 
 
-function styleSuperNode(){
-    nodeGroup.selectAll('.node')
-		.filter(function(d){
-			return d._children.length > 0;
-		})
+function styleSuperNode(node_selector){
+    nodeGroup.select(node_selector)
         .attr('r', function(d){
-            return powerScale(d._child_count) + NODE_RADIUS
+            return powerScale(d._child_count) + NODE_RADIUS;
         })
         .style('stroke', 'white')
         .style('stroke-width', 5)
@@ -322,11 +321,8 @@ function styleSuperNode(){
         .style('fill-opacity', 0.2);
 }
 
-function styleRegNode(){
-    var g = nodeGroup.selectAll('.node')
-		.filter(function(d){
-			return d._children.length == 0;
-		})
+function styleRegNode(node){
+    nodeGroup.selectAll(node)
         .attr('r', NODE_RADIUS)
         .style('fill', 'white')
 		.style('fill-opacity', 1);

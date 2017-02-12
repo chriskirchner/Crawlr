@@ -7,7 +7,7 @@ import sys
 import json
 from time import sleep
 
-NUM_THREADS = 75
+NUM_THREADS = 25
 
 class Scraper(threading.Thread):
 
@@ -63,7 +63,7 @@ class Scraper(threading.Thread):
         while True:
             link = self._getLink()
             if link is not None:
-                r = requests.get(link.get('url'))
+                r = requests.get(link.get('url'), timeout=0.5)
                 if r.status_code == 200:
                     damn_html = UnicodeDammit(r.content)
                     tree = html.fromstring(damn_html.unicode_markup)
