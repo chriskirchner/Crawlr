@@ -179,6 +179,10 @@ function addToGFX(node){
 }
 
 
+var powerScale = d3.scalePow()
+// // .domain([0, MAX_NODES])
+// // .range([NODE_RADIUS, 50]);
+    .exponent(1);
 
 //post-order traversal
 function trimTree(root, nodes){
@@ -203,7 +207,7 @@ function trimTree(root, nodes){
                 // d3.select('[href="'+p.url+'"]')
                 //     .attr('r', function(d){
                 //         return powerScale(d._child_count) + NODE_RADIUS;
-                //     })
+                //     });
                 p = p.parent;
 			}
 		}
@@ -224,10 +228,7 @@ function getTimes(nodes){
 	})
 }
 
-var powerScale = d3.scalePow()
-// // .domain([0, MAX_NODES])
-// // .range([NODE_RADIUS, 50]);
-    .exponent(0.5);
+
 
 function updateGFX(root){
     var nodes = getNodes(root);
@@ -253,7 +254,9 @@ function updateGFX(root){
     //linkSvg = linkEnter.merge(linkSvg);
 
 	nodeSvg = nodeGroup.selectAll('.node')
-		.data(nodes);
+		.data(nodes, function(d){
+			return d;
+		});
 
 	nodeSvg.exit().remove();
 
