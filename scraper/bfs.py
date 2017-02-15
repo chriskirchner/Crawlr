@@ -8,7 +8,7 @@ import sys
 import json
 from time import sleep
 
-NUM_THREADS = 200
+NUM_THREADS = 25
 
 class Scraper(threading.Thread):
 

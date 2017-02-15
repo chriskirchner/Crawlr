@@ -23,6 +23,7 @@ var ticksToSkip = 0;
 var MAX_NODES = 350;
 var NODE_RADIUS = 8;
 var GFX_UPDATE_INTERVAL = 20;
+var KEYWORD_NODE_RADIUS = 12;
 
 var tip = d3.tip()
     .attr('class', 'd3-tip')
@@ -77,7 +78,7 @@ function addToTree(root, node){
 	// console.log(num++);
     // var dateTime = new Date();
     // var time = dateTime.getTime();
-	console.log(link_count++);
+    // console.log(link_count++);
 	var parent = null;
     var child = {
     	'url': node.url,
@@ -85,8 +86,10 @@ function addToTree(root, node){
 		'children': [],
 		'_children': [],
 		'collapsed': false,
-		'_child_count': 0
+		'_child_count': 0,
+		'keyword': node.keyword
     };
+
     if(node.parent == null){
 		root = child;
 		root.fx = 0;
@@ -275,7 +278,6 @@ function updateGFX(root){
         .style('fill', 'white')
         .on("click", click)
 		.on('dblclick', function(d){
-			console.log('blah');
 			window.open(d.url);
 		})
         .on("mouseover", tip.show)
@@ -295,6 +297,9 @@ function updateGFX(root){
 function restyleGFX(root) {
     function recurse(node) {
         if (node.children) node.children.forEach(recurse);
+        if (node.keyword == true){
+        	styleKeywordNode('[href="' + node.url + '"]');
+		}
         if (node._children.length > 0) {
             styleSuperNode('[href="' + node.url + '"]');
             node.collapsed = true;
@@ -307,6 +312,17 @@ function restyleGFX(root) {
     recurse(root);
 }
 
+function styleKeywordNode(node_selector){
+    nodeGroup.select(node_selector)
+        .attr('r', function(d){
+            return powerScale(d._child_count) + NODE_RADIUS;
+        })
+		.attr('r', KEYWORD_NODE_RADIUS)
+        .style('fill', 'red')
+        .style('fill-opacity', 0.2)
+		.style('stroke','#eb0000')
+		.style('stroke-width', 5);
+}
 
 function styleSuperNode(node_selector){
     nodeGroup.select(node_selector)
