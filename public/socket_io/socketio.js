@@ -20,6 +20,7 @@ var link_count = 0;
 var numTicks = 0;
 var ticksToSkip = 0;
 
+//350 ideal
 var MAX_NODES = 350;
 var NODE_RADIUS = 8;
 var GFX_UPDATE_INTERVAL = 20;
@@ -106,6 +107,7 @@ function addToTree(root, node){
         while (parent != null){
             // parent.timestamp = time;
 			parent.timestamp = num++;
+			parent._child_count++;
             parent = parent.parent;
         }
 	}
@@ -136,7 +138,6 @@ function findParent(root, parent_url){
 
             	p = root;
             	while (p != null){
-            		p._child_count--;
             		p = p.parent;
 				}
 
@@ -210,7 +211,7 @@ function trimTree(root, nodes){
 			//update total child count for parents
 			p = node.parent;
 			while(p != null){
-				p._child_count++;
+				// p._child_count++;
                 //grow parent radius
                 // d3.select('[href="'+p.url+'"]')
                 // styleSuperNode('[href="'+p.url+'"]');
@@ -240,7 +241,7 @@ function getTimes(nodes){
 
 function updateGFX(root){
     var nodes = getNodes(root);
-    if (nodes.length > MAX_NODES){
+    if (nodes.length >= MAX_NODES){
         trimTree(root, nodes);
 		nodes = getNodes(root);
     }
@@ -287,12 +288,19 @@ function updateGFX(root){
             .on("drag", drag)
             .on("end", endDrag));
 
+
     nodeSvg = nodeEnter.merge(nodeSvg);
 
     simulation.nodes(nodes);
     simulation.force("link").links(links);
 
 }
+
+
+
+// function transformPosition(d){
+// 	return "translate(" + d.x + "," + d.y + ")";
+// }
 
 function restyleGFX(root) {
     function recurse(node) {
@@ -360,7 +368,7 @@ function click(d){
 		return;
 	}
 	else if (d._children.length > 0){
-        var child_count = d._children.length;
+        // var child_count = d._children.length;
         //update time stamps
 		//bug here i think
 		d._children.forEach(function(child){
@@ -374,19 +382,19 @@ function click(d){
         //update total child count for parents
         var parent = d;
         while(parent != null){
-            parent._child_count -= child_count;
+            // parent._child_count -= child_count;
             parent = parent.parent;
         }
     }
 	else if (d._children == 0){
 
-        var child_count = d.children.length;
+        // var child_count = d.children.length;
 		d._children = d._children.concat(d.children);
 		d.children = [];
 
         var parent = d;
         while(parent != null){
-            parent._child_count += child_count;
+            // parent._child_count += child_count;
             parent = parent.parent;
         }
     }
@@ -430,15 +438,28 @@ function ticked(){
 	// }
 	nodeGroup
 		.selectAll(".node")
-		.attr("cx", function(d) {return d.x;})
-		.attr("cy", function(d) {return d.y;});
+		// .attr("cx", function(d) {return d.x;})
+		// .attr("cy", function(d) {return d.y;})
+		.attr('transform', function(d){
+				return 'translate(' + d.x + ',' + d.y + ')'
+		});
 
 	linkGroup
 		.selectAll(".link")
 		.attr("x1", function(d) {return d.source.x;})
 		.attr("y1", function(d) {return d.source.y;})
 		.attr("x2", function(d) {return d.target.x;})
-		.attr("y2", function(d) {return d.target.y;});
+		.attr("y2", function(d) {return d.target.y;})
+		// .attr('transform', function(d){
+		// 	return 'translate(' + d.source.x + ',' + d.source.y + ')'
+		// })
+		// .attr('transform', function(d){
+		// 	return 'translate(' + d.target.x + ',' + d.target.y + ')'
+		// });
+
+    // http://stackoverflow.com/questions/19291316/force-graph-in-d3-js-disappearing-nodes
+
+
 }
 
 var buffer = [];
