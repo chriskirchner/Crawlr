@@ -45,7 +45,7 @@
                 <select name="url_history" id="url_history2">
                 <option selected="selected"></option>
                 {{#each url_history}}
-                  <option>URL: {{this.url}} | Search Term: {{this.search_term}} | Levels: {{this.levels}} | Crawl Type: {{this.crawl_type}}</option>
+                  <option>URL: {{this.url}} | Search Term: {{this.keyword}} | Levels: {{this.max_levels}} | Crawl Type: {{this.crawl_type}}</option>
                 {{/each}}  
                 </select>
              <input type="submit" class="btn btn-primary btn-xs" name="resetSubmit" id="resetSubmit" value="Clear History">
