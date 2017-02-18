@@ -2,6 +2,7 @@
 
 html, body {
 	height: 100%;
+	padding-top: 5px;
 	/*background-color: #333;*/
 	background-image: url('/images/dark_background.jpg');
 }
@@ -70,4 +71,32 @@ svg {
 
 .line {
 	shape-rendering: crispEdges;
+}
+
+.navbar {
+	background: transparent;
+	border: 0px;
+}
+
+.glyphicon-cog {
+	font-size: 2em;
+}
+
+.btn.btn-glyph-custom {
+	background-color: rgba(0,0,0,0.5);
+	color: white;
+	border-color: black;
+}
+
+.dropdown-menu {
+	background-color: rgba(0,0,0,0.5);
+}
+
+.dropdown-menu li a {
+	color: white;
+	text-align: left;
+}
+
+.dropdown-menu li a span {
+	float: right;
 }
