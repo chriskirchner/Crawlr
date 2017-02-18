@@ -10,5 +10,9 @@ npm install
 mkdir venv
 virtualenv -p python3.5 venv
 . ./venv/bin/activate
+<<<<<<< HEAD
 pip install -r pip.txt
+=======
+pip install -r pip.txt 
+>>>>>>> f6be807927268950403ec4f12fc10248da5637ac
 sudo npm install forever -g
