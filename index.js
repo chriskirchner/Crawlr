@@ -1,3 +1,11 @@
+/**
+ * Script: index.js
+ * Description: server code that interfaces with client and scrapers
+ * Author: Christiano Vannelli and Chris Kirchner
+ * Email: vannellc@oregonstate.edu and kirchnch@oregonstate.edu
+ */
+
+
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
@@ -7,22 +15,19 @@ var spawn = require('child_process').spawn;
 var pythonShell = require('python-shell');
 var session = require('express-session');
 
-
-
 //setup handlebars
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 app.set('port', 8080);
 
-
+//setup bod parser
 var bodyParser = require('body-parser');
 /*needed for post request */
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-
 app.use(express.static(__dirname + '/public'));
-
+//setup session secret
 app.use(session({secret:'SuperSecretPassword'}));
 
 session.url_history = [];
@@ -35,19 +40,15 @@ app.get('/',function(req,res){
 
   for (var c in context.url_history)
   {
-    if (context.url_history[c].crawl_type == '0')
-    {
-      
+    if (context.url_history[c].crawl_type == '0') {
       context.url_history[c].crawl_type = "Depth-First";
     }
 
-    else if(context.url_history[c].crawl_type == '1')
-    {
+    else if(context.url_history[c].crawl_type == '1') {
       context.url_history[c].crawl_type = "Breadth-First";
     }
   }
   
-  // console.log(context.url_history);
   res.render('home', context);
 
 });
@@ -61,6 +62,7 @@ app.post('/', function(req, res, next){
   }
 });
 
+//setup python shell options for child_process
 var shellOptions = {
     mode: 'json',
     pythonPath: './venv/bin/python',
@@ -68,39 +70,46 @@ var shellOptions = {
     scriptPath: './scraper'
 };
 
+//function called when user connects to server
 io.on('connect', function(socket){
   console.log('socket: user connected to socket.io');
   var shell = null;
 
+  //function called when user issues a crawl from client
   socket.on('reap urls', function(start_node){
 
     console.log('reaping urls...');
+    //crawl input is pushed to url history
     session.url_history.push(start_node);
 
+    //arguments for child process
     shellOptions.args = [
         start_node.url, start_node.max_levels, start_node.keyword
     ];
 
+    //create python shell for python bfs scraper
     shell = new pythonShell('bfs.py', shellOptions);
     var i = 0;
+    //function called when node is received from scraper
+    //uploads node to client
     shell.on('message', function(message){
-      //debuggng with 100 nodes
-      // if (i++ >= 2000){
-      //   message.keyword = true;
-      // }
+      //kill scraper when keyword is found
       if (message.keyword){
         shell.childProcess.kill('SIGINT');
       }
       console.log(message);
+      //send node to client
       socket.emit('node send', message);
     });
+    //function called when error received from scraper
     shell.on('error', function(err){
       console.log(err);
     });
   });
 
+  //function called on client disconnect
   socket.on('disconnect', function(){
-    //need to kill children
+    //kills scraper on disconnect
     if (shell){
       shell.childProcess.kill('SIGINT');
     }
@@ -108,7 +117,6 @@ io.on('connect', function(socket){
   });
 
 });
-
 
 /*route handler for 404 errors */
 app.use(function(req,res){
@@ -127,8 +135,7 @@ app.use(function(err, req, res, next){
   process.exit();
 });
 
-
-
+//finally, setup server
 http.listen(app.get('port'), function(){
   console.log('Express started on http://localhost:' + app.get('port') + '; press Ctrl-C to terminate.');
 });
