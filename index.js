@@ -65,7 +65,7 @@ app.post('/', function(req, res, next){
 //setup python shell options for child_process
 var shellOptions = {
     mode: 'json',
-    pythonPath: './venv/bin/python',
+    pythonPath: './env/Scripts/python',
     pythonOptions: ['-u'],
     scriptPath: './scraper'
 };
@@ -100,7 +100,9 @@ io.on('connect', function(socket){
       if (message.keyword){
         shell.childProcess.kill('SIGINT');
       }
-      // console.log(message);
+
+      message.crawl_type = start_node.crawl_type;
+      console.log(message);
       //send node to client
       socket.emit('node send', message);
     });
