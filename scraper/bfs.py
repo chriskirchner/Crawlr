@@ -65,6 +65,7 @@ class Scraper(threading.Thread):
         for link in links:
             self.unvisited.put(link)
 
+
     def _getLinks(self, tree):
         """
         getLinks: returns links from lxml tree
@@ -98,9 +99,13 @@ class Scraper(threading.Thread):
                 r = None
                 # try to connect to link
                 try:
-                    r = requests.get(link.get('url'), timeout=0.5)
+                    # r = requests.head(link.get('url'), timeout=0.1)
+                    # if r.headers['content-type'].split(';')[0] == 'text/html':
+                    #     r = requests.get(link.get('url'), timeout=0.5)
+                    r = requests.get(link.get('url'), timeout=1)
                 except requests.RequestException as e:
                     print(e, file=sys.stderr)
+                # only follow OK links that contain html
                 if r is not None and r.status_code == 200:
                     tree = None
                     # try to build lxml tree with unicoded html

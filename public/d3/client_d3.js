@@ -40,7 +40,7 @@ var KEYWORD_NODE_RADIUS = 12;
 //options to skip ticks in force layout template to improve performance
 //performance code from http://stackoverflow.com/questions/26188266/how-to-speed-up-the-force-layout-animation-in-d3-js
 var NUM_TICKS = 0;
-var TICKS_TO_SKIP = 0;
+var TICKS_TO_SKIP = 1;
 
 //global to hold "timestamp" for nodes to implement revolving force layout
 var NUM = 0;
@@ -68,7 +68,7 @@ var tip = d3.tip()
  */
 
 function setupGFX(){
-	
+
     //setup viewport with width and height
     svg = d3.select('section')
         .append('svg')
@@ -87,6 +87,11 @@ function setupGFX(){
         .force("link", d3.forceLink().distance(90))
         .force("x", d3.forceX(0).strength(0.005))
         .force("y", d3.forceY(0).strength(0.005))
+		.force("-x_right", d3.forceX(-width/2).strength(0.005))
+		.force("-x_left", d3.forceX(width/2).strength(0.005))
+		.force("-y_top", d3.forceY(-height/2).strength(0.005))
+		.force("-y_bottom", d3.forceY(height/2).strength(0.005))
+		// .force("collision", d3.forceCollide(20).strength(0.1))
         .on("tick", function(){
             if (NUM_TICKS > TICKS_TO_SKIP){
                 ticked();
@@ -133,7 +138,8 @@ function addToTree(root, node){
 		//number of child nodes
 		'_child_count': 0,
 		//boolean if keyword found in website
-		'keyword': node.keyword
+		'keyword': node.keyword,
+		'radius': NODE_RADIUS
     };
 
     //fix position and root of first node
@@ -498,7 +504,8 @@ function restyleGFX(root) {
 function styleKeywordNode(node_selector){
     nodeGroup.select(node_selector)
         .attr('r', function(d){
-            return powerScale(d._child_count) + NODE_RADIUS;
+        	d.radius = KEYWORD_NODE_RADIUS;
+            return d.radius;
         })
 		.attr('r', KEYWORD_NODE_RADIUS)
         .style('fill', 'red')
@@ -514,7 +521,8 @@ function styleKeywordNode(node_selector){
 function styleSuperNode(node_selector){
     nodeGroup.select(node_selector)
         .attr('r', function(d){
-            return powerScale(d._child_count) + NODE_RADIUS;
+            d.radius = powerScale(d._child_count) + NODE_RADIUS;
+            return d.radius;
         })
         .style('stroke', 'white')
         .style('stroke-width', 5)
@@ -528,7 +536,10 @@ function styleSuperNode(node_selector){
  */
 function styleRegNode(node_selector){
     nodeGroup.selectAll(node_selector)
-        .attr('r', NODE_RADIUS)
+        .attr('r', function(d){
+        	d.radius = NODE_RADIUS;
+        	return NODE_RADIUS;
+        })
         .style('fill', 'white')
 		.style('fill-opacity', 1);
 }
@@ -583,13 +594,14 @@ function ticked(){
 	//added transformation does not seem to affect transformation to new positions
     //transformation added with help from bug in
 	// http://stackoverflow.com/questions/19291316/force-graph-in-d3-js-disappearing-nodes
+	//bound box - https://bl.ocks.org/mbostock/1129492
 	nodeGroup
 		.selectAll(".node")
-		// .attr("cx", function(d) {return d.x;})
-		// .attr("cy", function(d) {return d.y;})
-		.attr('transform', function(d){
-				return 'translate(' + d.x + ',' + d.y + ')'
-		});
+		.attr("cx", function(d) {return Math.max(d.radius-width/2, Math.min(width/2-d.radius, d.x));})
+		.attr("cy", function(d) {return Math.max(d.radius-height/2, Math.min(height/2-d.radius, d.y));});
+		// .attr('transform', function(d){
+		// 		return 'translate(' + d.x + ',' + d.y + ')'
+		// });
 
 	//updates node link's x and y positions based on force simulation
 	linkGroup
