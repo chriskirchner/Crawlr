@@ -40,7 +40,7 @@ var KEYWORD_NODE_RADIUS = 12;
 //options to skip ticks in force layout template to improve performance
 //performance code from http://stackoverflow.com/questions/26188266/how-to-speed-up-the-force-layout-animation-in-d3-js
 var NUM_TICKS = 0;
-var TICKS_TO_SKIP = 1;
+var TICKS_TO_SKIP = 0;
 
 //global to hold "timestamp" for nodes to implement revolving force layout
 var NUM = 0;
@@ -58,7 +58,7 @@ var tip = d3.tip()
 	//add html to design tooltip
     .html(function(d){
         html = "<strong>URL:</strong> <span style='color:red'>" + d.url + "</span>" + "<br>" +
-            	"<strong>Count:</strong> <span style='color:red'>" + d._child_count + "</span>";
+            	"<strong>Count:</strong> <span style='color:red'>" + d.timestamp + "</span>";
         return html;
     });
 
@@ -83,14 +83,14 @@ function setupGFX(){
 
     //setup force layout template
     simulation = d3.forceSimulation(nodes)
-        .force("charge", d3.forceManyBody().strength(-10))
+        .force("charge", d3.forceManyBody().strength(-25))
         .force("link", d3.forceLink().distance(90))
-        .force("x", d3.forceX(0).strength(0.005))
-        .force("y", d3.forceY(0).strength(0.005))
-		.force("-x_right", d3.forceX(-width/2).strength(0.005))
-		.force("-x_left", d3.forceX(width/2).strength(0.005))
-		.force("-y_top", d3.forceY(-height/2).strength(0.005))
-		.force("-y_bottom", d3.forceY(height/2).strength(0.005))
+        .force("x", d3.forceX(0).strength(0.002))
+        .force("y", d3.forceY(0).strength(0.002))
+		.force("-x_right", d3.forceX(-width/2).strength(0.02))
+		.force("-x_left", d3.forceX(width/2).strength(0.02))
+		.force("-y_top", d3.forceY(-height/2).strength(0.02))
+		.force("-y_bottom", d3.forceY(height/2).strength(0.02))
 		// .force("collision", d3.forceCollide(20).strength(0.1))
         .on("tick", function(){
             if (NUM_TICKS > TICKS_TO_SKIP){
@@ -115,6 +115,8 @@ function clearGFX(){
 	root = null;
 }
 
+var first = 0;
+
 
 /**
  * addToTree: adds new node to tree ADT
@@ -123,6 +125,8 @@ function clearGFX(){
  * @returns {*} - gives back root of tree for readability
  */
 function addToTree(root, node){
+
+
 
 	//convert format of node (website page) from scraper to tree for d3
 	var parent = null;
@@ -154,6 +158,10 @@ function addToTree(root, node){
 		if (!parent.children){
 			parent.children = [];
 		}
+
+		if (parent == null && child != root){
+			console.log('not arrived yet');
+		}
 		//assign child's parent to found parent
 		child.parent = parent;
 		//add new node to it's parent's list of children
@@ -166,7 +174,14 @@ function addToTree(root, node){
         }
 	}
 
-	return root;
+    // var length = getNodes(root).length;
+    // if (first == 0 && length == MAX_NODES){
+    //     first = 1;
+    //     child.keyword = true;
+    // }
+
+
+    return root;
 }
 
 /**
@@ -286,6 +301,12 @@ function trimTree(root, nodes){
                 parent._children.push(node);
                 var index = parent.children.indexOf(node);
                 parent.children.splice(index, 1);
+                // if (first == 0){
+                // 	first = 1;
+                // 	node.keyword = true;
+                //     console.log(trimTime);
+                //
+                // }
 			}
 
 			//vestigial code that may no longer be handy
@@ -303,6 +324,7 @@ function trimTree(root, nodes){
 	recurse(root);
 }
 
+
 /**
  * getTrimTime: returns the time at which nodes at or older need to be trimmed
  * @param nodes - list of nodes in tree ADT
@@ -310,8 +332,13 @@ function trimTree(root, nodes){
  */
 function getTrimTime(nodes){
 	var times = getTimes(nodes);
-	times.sort();
+	times.sort(function(a,b){
+		return a-b;
+	});
 	var NUMNodesToTrim = nodes.length - MAX_NODES;
+	// if (first == 0){
+	// 	console.log(times);
+	// }
 	return times[NUMNodesToTrim-1];
 }
 
@@ -422,12 +449,10 @@ function click(d){
     //     shown += nodes[i].children.length;
     // }
 
-	//update time for click node so it will not be trimmed
-    d.timestamp = NUM++;
+
     //do nothing for regular node
     if (d._children.length == 0
         && d.children.length == 0){
-        return;
     }
     //expose hidden children
     else if (d._children.length > 0){
@@ -461,6 +486,9 @@ function click(d){
             parent = parent.parent;
         }
     }
+
+    //update time for click node so it will not be trimmed
+    // d.timestamp = NUM++;
 
     //update and restyle simulation
     updateGFX(root);

@@ -102,7 +102,14 @@ class Scraper(threading.Thread):
                     # r = requests.head(link.get('url'), timeout=0.1)
                     # if r.headers['content-type'].split(';')[0] == 'text/html':
                     #     r = requests.get(link.get('url'), timeout=0.5)
-                    r = requests.get(link.get('url'), timeout=1)
+                    s = requests.Session()
+                    r = s.head(link.get('url'), timeout=0.25)
+                    content_type = r.headers.get('content-type', None)
+                    if content_type is None or content_type.split(';')[0] == 'text/html':
+                        r = s.get(link.get('url'), timeout=0.5)
+                        s.close()
+                    else:
+                        r = None
                 except requests.RequestException as e:
                     print(e, file=sys.stderr)
                 # only follow OK links that contain html
@@ -112,6 +119,7 @@ class Scraper(threading.Thread):
                     try:
                         # convert possibly bad html to unicode
                         damn_html = UnicodeDammit(r.content)
+                        r.close()
                         # convert html into lxml tree
                         tree = html.fromstring(damn_html.unicode_markup)
                         # make all links absolute based on url

@@ -89,15 +89,18 @@ io.on('connect', function(socket){
 
     //create python shell for python bfs scraper
     shell = new pythonShell('bfs.py', shellOptions);
-    var i = 0;
     //function called when node is received from scraper
     //uploads node to client
+    var i = 0;
     shell.on('message', function(message){
       //kill scraper when keyword is found
+      // if (i++ > 400){
+      //     shell.childProcess.kill('SIGINT');
+      // }
       if (message.keyword){
         shell.childProcess.kill('SIGINT');
       }
-      console.log(message);
+      // console.log(message);
       //send node to client
       socket.emit('node send', message);
     });
