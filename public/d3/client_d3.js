@@ -29,6 +29,7 @@ var root;
 var simulation, svg, g, linkGroup, nodeGroup;
 var svgLinks, svgNodes;
 var link_count = 0;
+var tranform;
 var nodeSvg, linkSvg, nodeEnter, linkEnter;
 
 //SCRIPT GLOBALS
@@ -36,6 +37,7 @@ var MAX_NODES = 350;
 var NODE_RADIUS = 8;
 var GFX_UPDATE_INTERVAL = 20;
 var KEYWORD_NODE_RADIUS = 12;
+var STYLE_TRANSITION_TIME = 100;
 
 //options to skip ticks in force layout template to improve performance
 //performance code from http://stackoverflow.com/questions/26188266/how-to-speed-up-the-force-layout-animation-in-d3-js
@@ -57,6 +59,12 @@ var tip = d3.tip()
     .offset([-10, 0])
 	//add html to design tooltip
     .html(function(d){
+        // d3.select(this)
+        //     .style('fill-opacity', 0.5)
+        //     .style('fill', '266ca9')
+        //     .style('stroke-width', 2)
+        //     .style('stroke', '266ca9')
+        //     .style('r', NODE_RADIUS*1.5);
         html = "<strong>URL:</strong> <span style='color:red'>" + d.url + "</span>" + "<br>" +
             	"<strong>Count:</strong> <span style='color:red'>" + d.timestamp + "</span>";
         return html;
@@ -74,7 +82,15 @@ function setupGFX(){
         .append('svg')
         .attr('width', width)
         .attr('height', height)
-		.call(tip);
+		.call(tip)
+		// .call(d3.behavior.zoom().on("zoom", function(){
+		// 	this.attr("transform", "translate("+d3.event.translate+") scale"+d3.event.scale+")");
+		// }));
+		.style("pointer-events", "all")
+		.call(d3.zoom()
+			.scaleExtent([1/2, 2])
+			.on("zoom", zoomer)
+		);
 
     //setup d3 groups of nodes (websites) and linsk
     g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
@@ -101,6 +117,12 @@ function setupGFX(){
                 NUM_TICKS += 1;
             }
         });
+}
+
+// var transform = d3.zoomIdentity.translate(width/2, height/2).scale(d3.event.transform.k);
+
+function zoomer(){
+	g.attr("transform", d3.zoomIdentity.translate(width/2, height/2).scale(d3.event.transform.k));
 }
 
 /**
@@ -411,13 +433,28 @@ function updateGFX(root){
         .style('stroke-width', 1)
         .style('stroke-opacity', 0.5)
         .on("click", click)
-		//open window on double click
-		.on('dblclick', function(d){
-			window.open(d.url);
+		.on('mousedown', function(d){
+			if (d3.event.button == 0){
+			}
+            //open window on double click
+            else if (d3.event.button == 2){
+				window.open(d.url);
+			}
 		})
 		//show tooltip on hover
-        .on("mouseover", tip.show)
-        .on("mouseout", tip.hide)
+        // .on("mouseover", tip.show)
+		.on("mouseover", function(d,i){
+			styleMouseoverNode(d3.select(this), d);
+            tip.show(d,i);
+		})
+        .on("mouseout", function(d){
+            styleMouseoutNode(d3.select(this), d);
+            tip.hide(d);
+		})
+		// .on("contextmenu", function(d){
+         //    d3.event.preventDefault();
+         //    window.open(d.url);
+		// })
 		//add drag action to node
         .call(d3.drag()
             .on("start", startDrag)
@@ -427,7 +464,6 @@ function updateGFX(root){
 
     //merge old elements with new elements
     nodeSvg = nodeEnter.merge(nodeSvg);
-
     //add list of nodes to simulation
     simulation.nodes(nodes);
     //add list of links to simulation
@@ -511,17 +547,18 @@ function restyleGFX(root) {
     function recurse(node) {
         if (node.children) node.children.forEach(recurse);
         //highlights the node where keyword is found
+        var svgNode = d3.select('[href="' + node.url + '"]');
         if (node.keyword == true){
-        	styleKeywordNode('[href="' + node.url + '"]');
+        	styleKeywordNode(svgNode);
 		}
 		//styles the super node with hidden children
         if (node._children.length > 0) {
-            styleSuperNode('[href="' + node.url + '"]');
+            styleSuperNode(svgNode);
             node.collapsed = true;
         }
         //styles regular node
         else if (node._children.length == 0 && node.collapsed == true) {
-            styleRegNode('[href="' + node.url + '"]');
+            styleRegNode(svgNode);
             node.collapsed = false;
         }
     }
@@ -532,31 +569,32 @@ function restyleGFX(root) {
  * styleKeywordNode: styles keyword node
  * @param node_selector - css for node with keyword
  */
-function styleKeywordNode(node_selector){
-    nodeGroup.select(node_selector)
+function styleKeywordNode(node){
+	node
+        .style('stroke-width', 5)
+		.transition().duration(STYLE_TRANSITION_TIME)
         .attr('r', function(d){
         	d.radius = KEYWORD_NODE_RADIUS;
             return d.radius;
         })
-		.attr('r', KEYWORD_NODE_RADIUS)
         .style('fill', 'red')
         .style('fill-opacity', 0.2)
-		.style('stroke','#eb0000')
-		.style('stroke-width', 5);
+		.style('stroke','#eb0000');
 }
 
 /**
  * styleSuperNode: styles collapsed node with hidden children
  * @param node_selector - css selector for node
  */
-function styleSuperNode(node_selector){
-    nodeGroup.select(node_selector)
+function styleSuperNode(node){
+    node
+        .style('stroke-width', 5)
+		.transition().duration(STYLE_TRANSITION_TIME)
         .attr('r', function(d){
             d.radius = powerScale(d._child_count) + NODE_RADIUS;
             return d.radius;
         })
         .style('stroke', 'white')
-        .style('stroke-width', 5)
 		.style('stroke-opacity', 1)
         .style('fill', 'grey')
         .style('fill-opacity', 0.2);
@@ -566,17 +604,59 @@ function styleSuperNode(node_selector){
  * styleRegNode: styles regular boring nodes
  * @param node - css selector for node
  */
-function styleRegNode(node_selector){
-    nodeGroup.selectAll(node_selector)
+function styleRegNode(node){
+    node
+        .style('stroke-width', 2)
+		.transition().duration(STYLE_TRANSITION_TIME)
         .attr('r', function(d){
         	d.radius = NODE_RADIUS;
         	return NODE_RADIUS;
         })
         .style('fill', 'white')
 		.style('stroke', 'gray')
-		.style('stroke-width', 2)
 		.style('stroke-opacity', 0.5)
-		.style('fill-opacity', 1);
+		.style('fill-opacity', 1)
+}
+
+function styleMouseoverNode(node, data){
+
+	var radius = NODE_RADIUS;
+	if (data._children.length > 0){
+		radius = 1.1*data.radius;
+	}
+	else {
+		radius = 1.5*data.radius;
+	}
+
+	if (data.keyword == true){
+
+        node
+			.transition().duration(STYLE_TRANSITION_TIME)
+            .attr('r', radius);
+	}
+	else {
+        node
+            .style('stroke-width', 2)
+			.transition().duration(STYLE_TRANSITION_TIME)
+			.style('fill-opacity', 0.5)
+            .style('fill', '266ca9')
+            .style('stroke', '266ca9')
+			.style('stroke-opacity', 1)
+            .attr('r', radius);
+	}
+
+}
+
+function styleMouseoutNode(node, data){
+	if (data.keyword == true){
+        styleKeywordNode(node);
+	}
+	else if (data._children.length > 0){
+		styleSuperNode(node);
+	}
+	else {
+		styleRegNode(node);
+	}
 }
 
 //drag code taken from bottom link - basically the standard
@@ -641,10 +721,10 @@ function ticked(){
 	//updates node link's x and y positions based on force simulation
 	linkGroup
 		.selectAll(".link")
-		.attr("x1", function(d) {return d.source.x;})
-		.attr("y1", function(d) {return d.source.y;})
-		.attr("x2", function(d) {return d.target.x;})
-		.attr("y2", function(d) {return d.target.y;});
+		.attr("x1", function(d) {return Math.max(-width/2, Math.min(width/2, d.source.x));})
+		.attr("y1", function(d) {return Math.max(-width/2, Math.min(width/2, d.source.y));})
+		.attr("x2", function(d) {return Math.max(-width/2, Math.min(width/2, d.target.x));})
+		.attr("y2", function(d) {return Math.max(-width/2, Math.min(width/2, d.target.y));});
 
 }
 
