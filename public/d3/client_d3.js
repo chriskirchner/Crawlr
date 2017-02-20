@@ -38,6 +38,7 @@ var NODE_RADIUS = 8;
 var GFX_UPDATE_INTERVAL = 20;
 var KEYWORD_NODE_RADIUS = 12;
 var STYLE_TRANSITION_TIME = 100;
+var NODE_DISTANCE = 90;
 
 //options to skip ticks in force layout template to improve performance
 //performance code from http://stackoverflow.com/questions/26188266/how-to-speed-up-the-force-layout-animation-in-d3-js
@@ -86,27 +87,30 @@ function setupGFX(){
 		// .call(d3.behavior.zoom().on("zoom", function(){
 		// 	this.attr("transform", "translate("+d3.event.translate+") scale"+d3.event.scale+")");
 		// }));
-		.style("pointer-events", "all")
+		// .style("pointer-events", "all")
 		.call(d3.zoom()
 			.scaleExtent([1/2, 2])
 			.on("zoom", zoomer)
 		);
 
     //setup d3 groups of nodes (websites) and linsk
-    g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+    // g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+    g = svg.append("g")
+		.attr('width', width)
+		.attr('height', height);
     linkGroup = g.append("g");
     nodeGroup = g.append("g");
 
     //setup force layout template
     simulation = d3.forceSimulation(nodes)
         .force("charge", d3.forceManyBody().strength(-25))
-        .force("link", d3.forceLink().distance(90))
+        .force("link", d3.forceLink().distance(NODE_DISTANCE))
         .force("x", d3.forceX(0).strength(0.002))
         .force("y", d3.forceY(0).strength(0.002))
-		.force("-x_right", d3.forceX(-width/2).strength(0.02))
-		.force("-x_left", d3.forceX(width/2).strength(0.02))
-		.force("-y_top", d3.forceY(-height/2).strength(0.02))
-		.force("-y_bottom", d3.forceY(height/2).strength(0.02))
+		.force("-x_right", d3.forceX(0).strength(0.02))
+		.force("-x_left", d3.forceX(width).strength(0.02))
+		.force("-y_top", d3.forceY(0).strength(0.02))
+		.force("-y_bottom", d3.forceY(height).strength(0.02))
 		// .force("collision", d3.forceCollide(20).strength(0.1))
         .on("tick", function(){
             if (NUM_TICKS > TICKS_TO_SKIP){
@@ -122,7 +126,10 @@ function setupGFX(){
 // var transform = d3.zoomIdentity.translate(width/2, height/2).scale(d3.event.transform.k);
 
 function zoomer(){
-	g.attr("transform", d3.zoomIdentity.translate(width/2, height/2).scale(d3.event.transform.k));
+	g.attr("transform", d3.zoomIdentity
+		.translate(d3.event.transform.x, d3.event.transform.y)
+		.scale(d3.event.transform.k)
+	);
 }
 
 /**
@@ -165,14 +172,14 @@ function addToTree(root, node){
 		'_child_count': 0,
 		//boolean if keyword found in website
 		'keyword': node.keyword,
-		'radius': NODE_RADIUS
+		'radius': 0
     };
 
     //fix position and root of first node
     if(node.parent == null){
 		root = child;
-		root.fx = 0;
-		root.fy = 0;
+		root.fx = width/2;
+		root.fy = height/2;
 	}
 	else {
     	//find new node's parent
@@ -186,6 +193,10 @@ function addToTree(root, node){
 		}
 		//assign child's parent to found parent
 		child.parent = parent;
+		//make new node spawn from random position around parent
+		var angle = 2*Math.PI*Math.random();
+		child.x = parent.x+2*NODE_DISTANCE*Math.cos(angle);
+		child.y = parent.y+2*NODE_DISTANCE*Math.sin(angle);
 		//add new node to it's parent's list of children
 		parent.children.push(child);
         //update parents time and child count
@@ -298,6 +309,8 @@ function addToGFX(node){
     root = addToTree(root, node);
     //update the graphics with new node
     updateGFX(root);
+    var nodeSVG = d3.select('[href="' + node.url + '"]');
+    styleRegNode(nodeSvg);
     //restyle the graphics with new node
     restyleGFX(root);
     //restart the force layout with new node
@@ -402,7 +415,7 @@ function updateGFX(root){
 		//append d3 line to lonely data
         .append("line")
         .attr('class', 'link')
-        .attr('stroke', 'white')
+        .attr('stroke', '#B8B8B8')
         .attr('stroke-width', 1);
 
     //merge new list of d3 elements with old list of elements
@@ -427,11 +440,11 @@ function updateGFX(root){
         })
 		.attr('class', 'node')
 		//add radius
-        .attr('r', NODE_RADIUS)
-        .style('fill', 'white')
-        .style('stroke', 'gray')
-        .style('stroke-width', 1)
-        .style('stroke-opacity', 0.5)
+        // .attr('r', 1)
+        // .style('fill', 'white')
+        // .style('stroke', 'gray')
+        // .style('stroke-width', 1)
+        // .style('stroke-opacity', 0.5)
         .on("click", click)
 		.on('mousedown', function(d){
 			if (d3.event.button == 0){
@@ -468,7 +481,6 @@ function updateGFX(root){
     simulation.nodes(nodes);
     //add list of links to simulation
     simulation.force("link").links(links);
-
 }
 
 /**
@@ -561,6 +573,9 @@ function restyleGFX(root) {
             styleRegNode(svgNode);
             node.collapsed = false;
         }
+        // else if (node.radius == 0){
+        	// styleRegNode(svgNode);
+		// }
     }
     recurse(root);
 }
@@ -606,7 +621,7 @@ function styleSuperNode(node){
  */
 function styleRegNode(node){
     node
-        .style('stroke-width', 2)
+        .style('stroke-width', 1)
 		.transition().duration(STYLE_TRANSITION_TIME)
         .attr('r', function(d){
         	d.radius = NODE_RADIUS;
@@ -712,8 +727,10 @@ function ticked(){
 	//bound box - https://bl.ocks.org/mbostock/1129492
 	nodeGroup
 		.selectAll(".node")
-		.attr("cx", function(d) {return Math.max(d.radius-width/2, Math.min(width/2-d.radius, d.x));})
-		.attr("cy", function(d) {return Math.max(d.radius-height/2, Math.min(height/2-d.radius, d.y));});
+		// .attr("cx", function(d) {return Math.max(d.radius-width/2, Math.min(width/2-d.radius, d.x));})
+		// .attr("cy", function(d) {return Math.max(d.radius-height/2, Math.min(height/2-d.radius, d.y));});
+		.attr("cx", function(d) {return Math.max(d.radius, Math.min(width-d.radius, d.x));})
+		.attr("cy", function(d) {return Math.max(d.radius, Math.min(height-d.radius, d.y));});
 		// .attr('transform', function(d){
 		// 		return 'translate(' + d.x + ',' + d.y + ')'
 		// });
@@ -721,11 +738,14 @@ function ticked(){
 	//updates node link's x and y positions based on force simulation
 	linkGroup
 		.selectAll(".link")
-		.attr("x1", function(d) {return Math.max(-width/2, Math.min(width/2, d.source.x));})
-		.attr("y1", function(d) {return Math.max(-width/2, Math.min(width/2, d.source.y));})
-		.attr("x2", function(d) {return Math.max(-width/2, Math.min(width/2, d.target.x));})
-		.attr("y2", function(d) {return Math.max(-width/2, Math.min(width/2, d.target.y));});
-
+		// .attr("x1", function(d) {return Math.max(-width/2, Math.min(width/2, d.source.x));})
+		// .attr("y1", function(d) {return Math.max(-height/2, Math.min(height/2, d.source.y));})
+		// .attr("x2", function(d) {return Math.max(-width/2, Math.min(width/2, d.target.x));})
+		// .attr("y2", function(d) {return Math.max(-height/2, Math.min(height/2, d.target.y));});
+		.attr("x1", function(d) {return Math.max(0, Math.min(width, d.source.x));})
+		.attr("y1", function(d) {return Math.max(0, Math.min(height, d.source.y));})
+		.attr("x2", function(d) {return Math.max(0, Math.min(width, d.target.x));})
+		.attr("y2", function(d) {return Math.max(0, Math.min(height, d.target.y));});
 }
 
 var buffer = [];
