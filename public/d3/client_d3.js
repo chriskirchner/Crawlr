@@ -407,6 +407,9 @@ function updateGFX(root){
 		//add radius
         .attr('r', NODE_RADIUS)
         .style('fill', 'white')
+        .style('stroke', 'gray')
+        .style('stroke-width', 1)
+        .style('stroke-opacity', 0.5)
         .on("click", click)
 		//open window on double click
 		.on('dblclick', function(d){
@@ -554,6 +557,7 @@ function styleSuperNode(node_selector){
         })
         .style('stroke', 'white')
         .style('stroke-width', 5)
+		.style('stroke-opacity', 1)
         .style('fill', 'grey')
         .style('fill-opacity', 0.2);
 }
@@ -569,6 +573,9 @@ function styleRegNode(node_selector){
         	return NODE_RADIUS;
         })
         .style('fill', 'white')
+		.style('stroke', 'gray')
+		.style('stroke-width', 2)
+		.style('stroke-opacity', 0.5)
 		.style('fill-opacity', 1);
 }
 
