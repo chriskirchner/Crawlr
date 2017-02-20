@@ -16,45 +16,6 @@ function AJAX(method, link, data, callback){
 } 
 
 
-
-
-// function getForm(){
-
-//     var data = {};
-//     data.action = 'insert';
-
-//     data.formInfo = {};
-//     data.formInfo.url = document.getElementsByName('url')[0].value;
-//     data.formInfo.search = document.getElementsByName('search_term')[0].value;
-//     data.formInfo.levels = document.getElementsByName('levels')[0].value;
-//     var cType = document.getElementsByName('crawl_type');
-
-//     data.formInfo.crawl_type = cType[0].options[cType[0].selectedIndex].value;
-//     /*obtains the form information */
-
-
-//     /*If form information is complete, AJAX function is called */
-//     if (data.formInfo.info !== '' &&
-//         data.formInfo.search !== '' &&
-//         data.formInfo.levels !== ''){
-//         data = JSON.stringify(data);
-
-//         AJAX('POST', '/', data, function(response){
-            
-//             resetForm();
-//             // makeTable(response);
-
-            
-//         });
-//     }
-//     else
-//     {
-//         alert("Invalid Input!");
-//         /*displays alert if form is not complete*/
-//     }
-// }
-
-
 function getHistory() {
 
     history2 = $("#url_history2 option:selected").text();
@@ -118,24 +79,25 @@ function resetHistory(){
 
 
 
-// /*Inserts a new exercise to the table when form is submitted*/
-// document.getElementById('crawlSubmit').addEventListener('click', function(e){
-//     e.preventDefault();
-//     getForm();
-// });
+var resetBtn = document.getElementById('resetSubmit');
 
-/*Inserts a new exercise to the table when form is submitted*/
-document.getElementById('resetSubmit').addEventListener('click', function(e){
-    e.preventDefault();
-    $("#user_history").remove();
-    resetHistory();
-    resetForm();
+if (resetBtn)
+{
+    resetBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        $("#user_history").remove();
+        resetHistory();
+        resetForm();
     
-});
+    });
+}
 
+var usrHist = document.getElementById('user_history');
 
-/*Inserts a new exercise to the table when form is submitted*/
-document.getElementById('user_history').addEventListener('change', function(e){
-    e.preventDefault();
-    getHistory();
+if (usrHist)
+{
+    usrHist.addEventListener('change', function(e){
+        e.preventDefault();
+        getHistory();
 });
+}

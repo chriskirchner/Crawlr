@@ -101,10 +101,9 @@ svg {
 	float: right;
 }
 
-
-
 .node {
   cursor: pointer;
+  fill: rgb(163, 245, 207);
 }
 
 .node:hover {
@@ -121,9 +120,3 @@ svg {
   text-anchor: middle;
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
 }
-
-/*.label,
-.node--root,
-.node--leaf {
-  pointer-events: none;
-}*/

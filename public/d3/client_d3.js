@@ -63,7 +63,6 @@ var tip = d3.tip()
     });
 
 
-
 var tip2 = d3.tip()
 
     //set class
@@ -140,23 +139,6 @@ function setupGFX_DFS(){
     pack = d3.pack()
     .size([diameter - margin, diameter - margin])
     .padding(2);
-
-    // svg = d3.select("section")
-    //     .append("svg")
-    //     .attr("width", width)
-    //     .attr("height", height);
-
-    // format = d3.format(",d");
-
-    // color = d3.scaleSequential(d3.interpolateMagma)
-    // .domain([-4, 4]);
-
-    // stratify = d3.stratify()
-    // .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
-
-    // pack = d3.pack()
-    // .size([width - 2, height - 2])
-    // .padding(3);
 }
 /**
  * clearGFX
@@ -181,24 +163,16 @@ var first = 0;
  */
 function addToTree(root, node){
 
+   
+
     if (node.level === 0)
-    {
-      sizeValue = "10000";
-      
-    }
-    else if (node.level == 1)
-    {
-      sizeValue = (Math.floor(Math.random() * (5000 - 1000 + 1)) + 1000).toString();
-    
-    }
-     else if (node.level == 2)
-    {
-      sizeValue = (Math.floor(Math.random() * (500 - 100 + 1)) + 100).toString();
-    }
-     else if (node.level == 3)
-    {
-      sizeValue = (Math.floor(Math.random() * (50 - 10 + 1)) + 10).toString();
-    }
+        sizeFactor = 10000000;
+    else
+        sizeFactor = 1000000 / node.level;
+
+    sizeValue = (Math.floor(Math.random() * (sizeFactor * (5 - 1) + 1)) + (sizeFactor * 1)).toString();
+
+
 
 
 
@@ -365,6 +339,7 @@ function addToGFX(node){
         root = addToTree(root, node);
         //update the graphics with new node
         updateGFX_DFS(root);
+        
     }
 	
 }
@@ -532,7 +507,7 @@ function updateGFX_DFS(root)
       nodes = pack(root).descendants(),
       view;
 
-console.log(root);
+      console.log(root);
 
   circle = g.selectAll("circle")
     .data(nodes)
@@ -549,6 +524,8 @@ console.log(root);
 
 
   node = g.selectAll("circle");
+  g.selectAll("circle").filter(function (d){ return d.data.keyword;})
+    .style("fill", "grey");
 
   svg
       .style("background", color(-1))
@@ -675,6 +652,8 @@ function restyleGFX(root) {
     }
     recurse(root);
 }
+
+
 
 /**
  * styleKeywordNode: styles keyword node

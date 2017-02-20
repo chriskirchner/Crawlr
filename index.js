@@ -58,8 +58,7 @@ app.post('/', function(req, res, next){
 
   if (req.body.action === 'reset'){
     session.url_history = [];
-
-  }
+	}
 });
 
 //setup python shell options for child_process
