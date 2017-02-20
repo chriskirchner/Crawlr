@@ -172,7 +172,7 @@ function addToTree(root, node){
 		'_child_count': 0,
 		//boolean if keyword found in website
 		'keyword': node.keyword,
-		'radius': 0
+		'radius': NODE_RADIUS
     };
 
     //fix position and root of first node
@@ -309,8 +309,7 @@ function addToGFX(node){
     root = addToTree(root, node);
     //update the graphics with new node
     updateGFX(root);
-    var nodeSVG = d3.select('[href="' + node.url + '"]');
-    styleRegNode(nodeSvg);
+
     //restyle the graphics with new node
     restyleGFX(root);
     //restart the force layout with new node
@@ -440,11 +439,11 @@ function updateGFX(root){
         })
 		.attr('class', 'node')
 		//add radius
-        // .attr('r', 1)
-        // .style('fill', 'white')
-        // .style('stroke', 'gray')
-        // .style('stroke-width', 1)
-        // .style('stroke-opacity', 0.5)
+        .attr('r', NODE_RADIUS)
+        .style('fill', 'white')
+        .style('stroke', 'gray')
+        .style('stroke-width', 1)
+        .style('stroke-opacity', 0.5)
         .on("click", click)
 		.on('mousedown', function(d){
 			if (d3.event.button == 0){
@@ -604,7 +603,7 @@ function styleKeywordNode(node){
 function styleSuperNode(node){
     node
         .style('stroke-width', 5)
-		.transition().duration(STYLE_TRANSITION_TIME)
+		// .transition().duration(STYLE_TRANSITION_TIME)
         .attr('r', function(d){
             d.radius = powerScale(d._child_count) + NODE_RADIUS;
             return d.radius;
