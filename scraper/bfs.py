@@ -103,10 +103,10 @@ class Scraper(threading.Thread):
                     # if r.headers['content-type'].split(';')[0] == 'text/html':
                     #     r = requests.get(link.get('url'), timeout=0.5)
                     s = requests.Session()
-                    r = s.head(link.get('url'), timeout=0.25)
+                    r = s.head(link.get('url'), timeout=1)
                     content_type = r.headers.get('content-type', None)
                     if content_type is None or content_type.split(';')[0] == 'text/html':
-                        r = s.get(link.get('url'), timeout=0.5)
+                        r = s.get(link.get('url'), timeout=1)
                         s.close()
                     else:
                         r = None
