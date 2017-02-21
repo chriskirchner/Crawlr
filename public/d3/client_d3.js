@@ -31,6 +31,7 @@ var svgLinks, svgNodes;
 var link_count = 0;
 var tranform;
 var nodeSvg, linkSvg, nodeEnter, linkEnter;
+var parent_cache = [];
 
 //SCRIPT GLOBALS
 var MAX_NODES = 350;
@@ -39,6 +40,8 @@ var GFX_UPDATE_INTERVAL = 20;
 var KEYWORD_NODE_RADIUS = 12;
 var STYLE_TRANSITION_TIME = 100;
 var NODE_DISTANCE = 90;
+//cache the number of parents in array to minimize recursive searches
+var NUM_PARENTS_CACHED = 32;
 
 //options to skip ticks in force layout template to improve performance
 //performance code from http://stackoverflow.com/questions/26188266/how-to-speed-up-the-force-layout-animation-in-d3-js
@@ -67,7 +70,9 @@ var tip = d3.tip()
         //     .style('stroke', '266ca9')
         //     .style('r', NODE_RADIUS*1.5);
         html = "<strong>URL:</strong> <span style='color:red'>" + d.url + "</span>" + "<br>" +
-            	"<strong>Count:</strong> <span style='color:red'>" + d.timestamp + "</span>";
+			"<strong>Hidden Count:</strong> <span style='color:red'>" + d._child_count + "</span>"+ "<br>" +
+			"<strong>Total Count:</strong> <span style='color:red'>" + d.child_count + "</span>" + "<br>" +
+        	"<strong>Direct Hidden Count:</strong> <span style='color:red'>" + d._children.length + "</span>";
         return html;
     });
 
@@ -103,7 +108,7 @@ function setupGFX(){
 
     //setup force layout template
     simulation = d3.forceSimulation(nodes)
-        .force("charge", d3.forceManyBody().strength(-25))
+        .force("charge", d3.forceManyBody().strength(-35))
         .force("link", d3.forceLink().distance(NODE_DISTANCE))
         .force("x", d3.forceX(0).strength(0.002))
         .force("y", d3.forceY(0).strength(0.002))
@@ -153,6 +158,8 @@ var first = 0;
  * @param node - new node added to tree
  * @returns {*} - gives back root of tree for readability
  */
+
+
 function addToTree(root, node){
 
 
@@ -168,7 +175,9 @@ function addToTree(root, node){
 		//represents hidden children
 		'_children': [],
 		'collapsed': false,
-		//number of child nodes
+		//number of total child nodes
+		'child_count': 0,
+		//number of hidden child nodes
 		'_child_count': 0,
 		//boolean if keyword found in website
 		'keyword': node.keyword,
@@ -182,15 +191,36 @@ function addToTree(root, node){
 		root.fy = height/2;
 	}
 	else {
-    	//find new node's parent
-        parent = findParent(root, node.parent.url);
-		if (!parent.children){
-			parent.children = [];
+    	parent = null;
+    	for (var i=0; i<parent_cache.length; i++){
+    		if (parent_cache[i].url == node.parent.url){
+    			parent = parent_cache[i];
+                //make child observable if previously hidden
+				p = parent;
+				while(p.parent != null){
+					//expose parent if previously hidden
+					var index = p.parent._children.indexOf(p);
+					if (index != -1){
+                        p.parent.children.push(p);
+                        p.parent._children.splice(index, 1);
+                        p.parent._child_count--;
+                        p.parent._child_count -= p.child_count;
+                    }
+                    p = p.parent;
+				}
+                break;
+			}
+		}
+		if (parent == null){
+            //find new node's parent
+            parent = findParent(root, node.parent.url);
+            //cache parent for quicker search (?)
+			if (parent_cache.length >= NUM_PARENTS_CACHED){
+                parent_cache.pop();
+            }
+            parent_cache.push(parent);
 		}
 
-		if (parent == null && child != root){
-			console.log('not arrived yet');
-		}
 		//assign child's parent to found parent
 		child.parent = parent;
 		//make new node spawn from random position around parent
@@ -202,20 +232,14 @@ function addToTree(root, node){
         //update parents time and child count
         while (parent != null){
 			parent.timestamp = NUM++;
-			parent._child_count++;
+			parent.child_count++;
             parent = parent.parent;
         }
 	}
 
-    // var length = getNodes(root).length;
-    // if (first == 0 && length == MAX_NODES){
-    //     first = 1;
-    //     child.keyword = true;
-    // }
-
-
     return root;
 }
+
 
 /**
  * findParent: finds a new node's parent in tree ADT
@@ -223,6 +247,8 @@ function addToTree(root, node){
  * @param parent_url - new node's parent url (search id)
  * @returns {*} - parent of new node, or null if no parent
  */
+
+
 function findParent(root, parent_url){
 
 	//base case
@@ -245,15 +271,10 @@ function findParent(root, parent_url){
             if (parent != null){
 
             	//make child observable if previously hidden
+                root._child_count -= root._children[i].child_count;
+                root._child_count--;
                 root.children.push(root._children[i]);
             	root._children.splice(i, 1);
-
-            	//vestigial search for updating parents
-				//may not be needed in final code
-                // p = root;
-                // while (p != null){
-            		// p = p.parent;
-				// }
 
                 return parent;
             }
@@ -332,27 +353,15 @@ function trimTree(root, nodes){
 			//hide node by placing in _children list
 			if (node.parent){
                 var parent = node.parent;
+
                 parent._children.push(node);
+                parent._child_count += node.child_count;
+                parent._child_count++;
                 var index = parent.children.indexOf(node);
                 parent.children.splice(index, 1);
-                // if (first == 0){
-                // 	first = 1;
-                // 	node.keyword = true;
-                //     console.log(trimTime);
-                //
-                // }
+
 			}
 
-			//vestigial code that may no longer be handy
-			//update total child count for parents
-			// p = node.parent;
-			// while(p != null){
-			// 	// p._child_count++;
-             //    //grow parent radius
-             //    // d3.select('[href="'+p.url+'"]')
-             //    // styleSuperNode('[href="'+p.url+'"]');
-             //    p = p.parent;
-			// }
 		}
 	}
 	recurse(root);
@@ -489,16 +498,7 @@ function updateGFX(root){
 function click(d){
 
 	//gets list of nodes from tree ADT
-    var nodes = getNodes(root);
-    var hidden = 0;
-    var shown = 0;
-
-    // NEED TO FINISH THIS CODE FOR UPDATING NODE SIZE WITH HIDDEN CHILDREN ONLY
-    // for (var i=0; i<nodes.length; i++){
-    //     hidden += nodes[i]._children.length;
-    //     shown += nodes[i].children.length;
-    // }
-
+    // var nodes = getNodes(root);
 
     //do nothing for regular node
     if (d._children.length == 0
@@ -516,25 +516,27 @@ function click(d){
         });
 
         //move hidden children to list of visible children
+		for (var i=0; i<d._children.length; i++){
+			d._child_count -= d._children[i].child_count;
+            d._child_count--;
+        }
+
         d.children = d.children.concat(d._children);
         d._children = [];
 
-        //update total child count for parents
-        var parent = d;
-        while(parent != null){
-            parent = parent.parent;
-        }
+
     }
     //collapse node's children
     else if (d._children == 0){
 
+        for (var i=0; i<d.children.length; i++){
+            d._child_count += d.children[i].child_count;
+            d._child_count++;
+        }
+
         d._children = d._children.concat(d.children);
         d.children = [];
 
-        var parent = d;
-        while(parent != null){
-            parent = parent.parent;
-        }
     }
 
     //update time for click node so it will not be trimmed
@@ -572,9 +574,7 @@ function restyleGFX(root) {
             styleRegNode(svgNode);
             node.collapsed = false;
         }
-        // else if (node.radius == 0){
-        	// styleRegNode(svgNode);
-		// }
+
     }
     recurse(root);
 }
@@ -586,7 +586,7 @@ function restyleGFX(root) {
 function styleKeywordNode(node){
 	node
         .style('stroke-width', 5)
-		.transition().duration(STYLE_TRANSITION_TIME)
+		// .transition().duration(STYLE_TRANSITION_TIME)
         .attr('r', function(d){
         	d.radius = KEYWORD_NODE_RADIUS;
             return d.radius;
@@ -603,12 +603,12 @@ function styleKeywordNode(node){
 function styleSuperNode(node){
     node
         .style('stroke-width', 5)
-		// .transition().duration(STYLE_TRANSITION_TIME)
         .attr('r', function(d){
             d.radius = powerScale(d._child_count) + NODE_RADIUS;
             return d.radius;
         })
-        .style('stroke', 'white')
+        // .transition().duration(STYLE_TRANSITION_TIME)
+		.style('stroke', 'white')
 		.style('stroke-opacity', 1)
         .style('fill', 'grey')
         .style('fill-opacity', 0.2);
@@ -621,7 +621,7 @@ function styleSuperNode(node){
 function styleRegNode(node){
     node
         .style('stroke-width', 1)
-		.transition().duration(STYLE_TRANSITION_TIME)
+		// .transition().duration(STYLE_TRANSITION_TIME)
         .attr('r', function(d){
         	d.radius = NODE_RADIUS;
         	return NODE_RADIUS;
@@ -643,22 +643,20 @@ function styleMouseoverNode(node, data){
 	}
 
 	if (data.keyword == true){
-
         node
-			.transition().duration(STYLE_TRANSITION_TIME)
+			// .transition().duration(STYLE_TRANSITION_TIME)
             .attr('r', radius);
 	}
 	else {
         node
             .style('stroke-width', 2)
-			.transition().duration(STYLE_TRANSITION_TIME)
+			// .transition().duration(STYLE_TRANSITION_TIME)
 			.style('fill-opacity', 0.5)
             .style('fill', '266ca9')
             .style('stroke', '266ca9')
 			.style('stroke-opacity', 1)
             .attr('r', radius);
 	}
-
 }
 
 function styleMouseoutNode(node, data){
