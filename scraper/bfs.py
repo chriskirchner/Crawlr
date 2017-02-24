@@ -7,12 +7,12 @@ import threading
 from bs4 import UnicodeDammit
 from queue import Queue
 import requests
-from lxml import html
+from lxml import html as parser
 import lxml
 import sys
 import json
 from time import sleep
-
+from copy import copy
 
 
 NUM_THREADS = 25
@@ -91,6 +91,39 @@ class Scraper(threading.Thread):
             return True
         return False
 
+    def _getHtml(self, link):
+        html = None
+        # try to connect to link
+        try:
+            headers = {'accept': 'text/html'}
+            r = s.get(link.get('url'), timeout=1)
+            if r.status_code == 200:
+                html = copy(r.content)
+            else:
+                html = None
+        except requests.RequestException as e:
+            print(e, file=sys.stderr)
+            # only follow OK links that contain html
+        finally:
+            if html is not None:
+                r.close()
+            return html
+
+    def _getTree(self, html, base_url):
+        # try to build lxml tree with unicoded html
+        tree = None
+        try:
+            # convert possibly bad html to unicode
+            damn_html = UnicodeDammit(html)
+            # convert html into lxml tree
+            tree = parser.fromstring(damn_html.unicode_markup)
+            # make all links absolute based on url
+            tree.make_links_absolute(base_url)
+        except Exception as e:
+            print(e, file=sys.stderr)
+        finally:
+            return tree
+
     def run(self):
         """
         override threading run function
@@ -98,53 +131,23 @@ class Scraper(threading.Thread):
         while True:
             # gets link from queue
             link = self._getLink()
+            html = None
             if link is not None:
-                r = None
-                # try to connect to link
-                try:
-                    # r = requests.head(link.get('url'), timeout=0.1)
-                    # if r.headers['content-type'].split(';')[0] == 'text/html':
-                    #     r = requests.get(link.get('url'), timeout=0.5)
-                    s = requests.Session()
-                    r = s.head(link.get('url'), timeout=1)
-                    content_type = r.headers.get('content-type', None)
-                    if content_type is None or content_type.split(';')[0] == 'text/html':
-                        r = s.get(link.get('url'), timeout=1)
-                        s.close()
-                    else:
-                        r = None
-                except requests.RequestException as e:
-                    print(e, file=sys.stderr)
-                # only follow OK links that contain html
-                if r is not None and r.status_code == 200:
-                    tree = None
-                    # try to build lxml tree with unicoded html
-                    try:
-                        # convert possibly bad html to unicode
-                        damn_html = UnicodeDammit(r.content)
-                        r.close()
-                        # convert html into lxml tree
-                        tree = html.fromstring(damn_html.unicode_markup)
-                        # make all links absolute based on url
-                        tree.make_links_absolute(link.get('url'))
-                    except Exception as e:
-                        print(e, file=sys.stderr)
-                    if tree is not None:
-                        # search for keyword in html text
-                        link['keyword'] = False
-                        if len(self.keyword) != 0 and self._findKeyword(tree):
-                            # trigger script interrupt with keyword
-                            link['keyword'] = True
-                        # send link to server through stdout
-                        print(json.dumps(link))
-                        #
-                        if link.get('level') < int(self.max_levels):
-                            # links = self._getLinks(tree)
-                            anchors = tree.xpath("//a")
-                            links = list()
-                            for a in anchors:
-                                links.append(a.get('href'))
-                            self._addLinks(links, link)
+                html = self._getHtml(link)
+            tree = None
+            if html is not None:
+                tree = self._getTree(html, link.get('url'))
+            if tree is not None:
+                # search for keyword in html text
+                link['keyword'] = False
+                if len(self.keyword) != 0 and self._findKeyword(tree):
+                    # trigger script interrupt with keyword
+                    link['keyword'] = True
+                # send link to server through stdout
+                # print(json.dumps(link))
+                if link.get('level') < int(self.max_levels):
+                    links = self._getLinks(tree)
+                    self._addLinks(links, link)
             # mark task as done for queue.join
             self.unvisited.task_done()
 
