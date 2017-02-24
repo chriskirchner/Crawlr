@@ -65,9 +65,9 @@ app.post('/', function(req, res, next){
 //setup python shell options for child_process
 var shellOptions = {
     mode: 'json',
-    pythonPath: './venv/bin/python',
+    pythonPath: './venv/bin/python3',
     pythonOptions: ['-u'],
-    scriptPath: './scraper'
+    scriptPath: './scrapys/scrapys/spiders'
 };
 
 //function called when user connects to server
@@ -88,10 +88,10 @@ io.on('connect', function(socket){
     ];
 
     //create python shell for python bfs scraper
-    shell = new pythonShell('bfs.py', shellOptions);
+    shell = new pythonShell('bfs_wrapper.py', shellOptions);
     //function called when node is received from scraper
     //uploads node to client
-    var i = 0;
+    // var i = 0;
     shell.on('message', function(message){
       //kill scraper when keyword is found
       // if (i++ > 400){
@@ -102,6 +102,7 @@ io.on('connect', function(socket){
       }
       // console.log(message);
       //send node to client
+      console.log(message);
       socket.emit('node send', message);
     });
     //function called when error received from scraper

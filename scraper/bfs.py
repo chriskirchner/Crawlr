@@ -13,6 +13,8 @@ import sys
 import json
 from time import sleep
 
+
+
 NUM_THREADS = 25
 
 # scraper class for threading
@@ -72,7 +74,8 @@ class Scraper(threading.Thread):
         :param tree: lxml tree built from html
         :return: found links
         """
-        anchors = tree.cssselect("a")
+        # anchors = tree.cssselect("a")
+        anchors = tree.xpath("//a")
         links = list()
         for a in anchors:
             links.append(a.get('href'))
@@ -136,7 +139,11 @@ class Scraper(threading.Thread):
                         print(json.dumps(link))
                         #
                         if link.get('level') < int(self.max_levels):
-                            links = self._getLinks(tree)
+                            # links = self._getLinks(tree)
+                            anchors = tree.xpath("//a")
+                            links = list()
+                            for a in anchors:
+                                links.append(a.get('href'))
                             self._addLinks(links, link)
             # mark task as done for queue.join
             self.unvisited.task_done()

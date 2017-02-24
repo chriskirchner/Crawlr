@@ -162,8 +162,6 @@ var first = 0;
 
 function addToTree(root, node){
 
-
-
 	//convert format of node (website page) from scraper to tree for d3
 	var parent = null;
     var child = {
@@ -185,7 +183,7 @@ function addToTree(root, node){
     };
 
     //fix position and root of first node
-    if(node.parent == null){
+    if(node.parent_url == null){
 		root = child;
 		root.fx = width/2;
 		root.fy = height/2;
@@ -193,7 +191,7 @@ function addToTree(root, node){
 	else {
     	parent = null;
     	for (var i=0; i<parent_cache.length; i++){
-    		if (parent_cache[i].url == node.parent.url){
+    		if (parent_cache[i].url == node.parent_url){
     			parent = parent_cache[i];
                 //make child observable if previously hidden
 				p = parent;
@@ -213,7 +211,7 @@ function addToTree(root, node){
 		}
 		if (parent == null){
             //find new node's parent
-            parent = findParent(root, node.parent.url);
+            parent = findParent(root, node.parent_url);
             //cache parent for quicker search (?)
 			if (parent_cache.length >= NUM_PARENTS_CACHED){
                 parent_cache.pop();
@@ -378,11 +376,11 @@ function getTrimTime(nodes){
 	times.sort(function(a,b){
 		return a-b;
 	});
-	var NUMNodesToTrim = nodes.length - MAX_NODES;
+	var numNodesToTrim = nodes.length - MAX_NODES;
 	// if (first == 0){
 	// 	console.log(times);
 	// }
-	return times[NUMNodesToTrim-1];
+	return times[numNodesToTrim-1];
 }
 
 /**
@@ -527,7 +525,7 @@ function click(d){
 
     }
     //collapse node's children
-    else if (d._children == 0){
+    else if (d._children == 0 && d.children.length > 0){
 
         for (var i=0; i<d.children.length; i++){
             d._child_count += d.children[i].child_count;
