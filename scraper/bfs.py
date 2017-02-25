@@ -6,6 +6,7 @@
 import threading
 from bs4 import UnicodeDammit
 from queue import Queue
+from queue import LifoQueue
 import requests
 from lxml import html as parser
 import lxml
@@ -93,10 +94,11 @@ class Scraper(threading.Thread):
 
     def _getHtml(self, link):
         html = None
+        r = None
         # try to connect to link
         try:
             headers = {'accept': 'text/html'}
-            r = s.get(link.get('url'), timeout=1)
+            r = requests.get(link.get('url'), timeout=2, headers=headers)
             if r.status_code == 200:
                 html = copy(r.content)
             else:
@@ -105,7 +107,7 @@ class Scraper(threading.Thread):
             print(e, file=sys.stderr)
             # only follow OK links that contain html
         finally:
-            if html is not None:
+            if r is not None:
                 r.close()
             return html
 
@@ -144,7 +146,7 @@ class Scraper(threading.Thread):
                     # trigger script interrupt with keyword
                     link['keyword'] = True
                 # send link to server through stdout
-                # print(json.dumps(link))
+                print(json.dumps(link))
                 if link.get('level') < int(self.max_levels):
                     links = self._getLinks(tree)
                     self._addLinks(links, link)
@@ -158,6 +160,7 @@ if __name__ == "__main__":
     start_url = sys.argv[1]
     max_levels = sys.argv[2]
     keyword = sys.argv[3]
+    search_type = sys.argv[4]
 
     # use lock to visited links so only one thread can update at a time
     visited_lock = threading.Lock()
@@ -165,7 +168,13 @@ if __name__ == "__main__":
     # a bloom filter may improve performance with less memory
     visited_links = set()
     # create a queue of unvisited links added by threads as they scrape
-    unvisited_links = Queue()
+    if search_type == 1:
+        # BFS
+        unvisited_links = Queue()
+    else:
+        # DFS
+        NUM_THREADS = 1
+        unvisited_links = LifoQueue()
     threads = list()
 
     first_link = dict()
