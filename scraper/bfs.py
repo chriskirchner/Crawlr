@@ -57,12 +57,11 @@ class Scraper(threading.Thread):
         """
         level = parent.get('level')+1
         links = list()
-        parent['parent'] = None
         for href in hrefs:
             new_link = dict()
             new_link['url'] = href
             new_link['level'] = level
-            new_link['parent'] = parent
+            new_link['parent_url'] = parent['url']
             links.append(new_link)
 
         for link in links:
@@ -168,18 +167,18 @@ if __name__ == "__main__":
     # a bloom filter may improve performance with less memory
     visited_links = set()
     # create a queue of unvisited links added by threads as they scrape
-    if search_type == 1:
+    if int(search_type) == 1:
         # BFS
         unvisited_links = Queue()
     else:
         # DFS
-        NUM_THREADS = 1
+        # NUM_THREADS = 1
         unvisited_links = LifoQueue()
     threads = list()
 
     first_link = dict()
     first_link['url'] = start_url
-    first_link['parent'] = None
+    first_link['parent_url'] = None
     first_link['level'] = 0
     # add first link to queue
     unvisited_links.put(first_link)
