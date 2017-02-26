@@ -26,6 +26,8 @@ import urllib
 import pickle
 import logging
 import pqueue
+import pickle
+from queuelib import FifoDiskQueue
 
 NUM_THREADS = 25
 MAX_DOWNLOAD_SIZE = 500000
@@ -105,7 +107,6 @@ class Parser:
         """
         override threading run function
         """
-        print('Parser: {}'.format(os.getpid()))
         while True:
             # gets link from queue
             (link, html) = self.html_queue.get()
@@ -119,7 +120,7 @@ class Parser:
                     # trigger script interrupt with keyword
                     link['keyword'] = True
                 # send link to server through stdout
-                # print(json.dumps(link))
+                print(json.dumps(link))
                 if link['level'] < int(self.max_levels):
                     links = self._getLinks(tree)
                     del tree
@@ -170,7 +171,6 @@ class Scraper(threading.Thread):
         """
         override threading run function
         """
-        print('Thread: {}'.format(os.getpid()))
         while True:
             # gets link from queue
             link = self.link_queue.get()
@@ -194,37 +194,45 @@ if __name__ == "__main__":
     # a bloom filter may improve performance with less memory
     visited_links = set()
     # create a queue of unvisited links added by threads as they scrape
-    if int(search_type) == 1:
-        # BFS
-        unvisited_links = Queue()
-    else:
-        # DFS
-        # NUM_THREADS = 1
-        unvisited_links = LifoQueue()
+    # if int(search_type) == 1:
+    #     # BFS
+    #     unvisited_links_to_parse = Queue()
+    # else:
+    #     # DFS
+    #     # NUM_THREADS = 1
+    #     unvisited_links = LifoQueue()
 
-    threads = list()
+    unvisited_links_out = Queue()
+    unvisited_links_in = Queue()
     unparsed_html = JoinableQueue()
+    disk_buffer = FifoDiskQueue("queuefile")
 
     first_link = dict()
     first_link['url'] = start_url
     first_link['parent_url'] = None
     first_link['level'] = 0
     # add first link to queue
-    unvisited_links.put(first_link)
+    unvisited_links_in.put(first_link)
 
     # setups and start threads
+    threads = list()
     for t in range(NUM_THREADS):
-        s = Scraper(unparsed_html, unvisited_links)
+        s = Scraper(unparsed_html, unvisited_links_in)
         s.daemon = True
         s.start()
         threads.append(s)
 
-    pool = multiprocessing\
-        .Pool(4, Parser(unparsed_html, unvisited_links, visited_links, visited_lock, max_levels, keyword)
-              .run, maxtasksperchild=1)
+    pool = multiprocessing \
+        .Pool(multiprocessing.cpu_count(), Parser(unparsed_html, unvisited_links_out, visited_links, visited_lock, max_levels, keyword)
+              .run)
 
-    sleep(20)
+    while True:
+        disk_buffer.push(pickle.dumps(unvisited_links_out.get()))
+        if unvisited_links_in.qsize() < 200:
+            for _ in range(100):
+                pop = disk_buffer.pop()
+                if pop is not None and len(pop) > 1:
+                    unvisited_links_in.put(pickle.loads(pop))
 
-
-# wait for queue to be empty and all tasks done, then exit
-    unparsed_html.join()
+    # wait for queue to be empty and all tasks done, then exit
+    # unvisited_links_in.join()
