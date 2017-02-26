@@ -5,8 +5,8 @@
 
 import threading
 from bs4 import UnicodeDammit
-from queue import Queue
-from queue import LifoQueue
+# from queue import Queue
+# from queue import LifoQueue
 import requests
 from lxml import html as parser
 import lxml
@@ -14,39 +14,35 @@ import sys
 import json
 from time import sleep
 from copy import copy
-
+from contextlib import closing
+import objgraph
+import multiprocessing
+from multiprocessing import JoinableQueue
+from multiprocessing import Queue
+import os
+from subprocess import Popen, PIPE
+import gc
+import urllib
+import pickle
+import logging
+import pqueue
 
 NUM_THREADS = 25
+MAX_DOWNLOAD_SIZE = 500000
+
 
 # scraper class for threading
-class Scraper(threading.Thread):
+class Parser:
 
-    def __init__(self, unvisited, visited, visited_lock, max_levels, keyword):
+    def __init__(self, html_queue, link_queue, visited, lock, max_levels, keyword):
 
         # inherit and setup thread variables from input
-        super(Scraper, self).__init__()
-        self.unvisited = unvisited
-        self.visited = visited
-        self.visited_lock = visited_lock
+        self.html_queue = html_queue
+        self.link_queue = link_queue
         self.max_levels = max_levels
+        self.visited = visited
+        self.visited_lock = lock
         self.keyword = keyword
-
-
-    def _getLink(self):
-
-        """
-        getLink: returns link from queue
-        :return: link
-        """
-        link = None
-        visited = True
-        while visited:
-            link = self.unvisited.get()
-            with self.visited_lock:
-                if link.get('url') not in self.visited:
-                    visited = False
-                    self.visited.add(link.get('url'))
-        return link
 
     def _addLinks(self, hrefs, parent):
 
@@ -56,17 +52,15 @@ class Scraper(threading.Thread):
         :param parent: parent link
         """
         level = parent.get('level')+1
-        links = list()
         for href in hrefs:
-            new_link = dict()
-            new_link['url'] = href
-            new_link['level'] = level
-            new_link['parent_url'] = parent['url']
-            links.append(new_link)
-
-        for link in links:
-            self.unvisited.put(link)
-
+            link = dict()
+            link['url'] = href
+            link['level'] = level
+            link['parent_url'] = parent['url']
+            if link['url'] not in self.visited:
+                self.link_queue.put(link)
+                with self.visited_lock:
+                    self.visited.add(link['url'])
 
     def _getLinks(self, tree):
         """
@@ -91,26 +85,7 @@ class Scraper(threading.Thread):
             return True
         return False
 
-    def _getHtml(self, link):
-        html = None
-        r = None
-        # try to connect to link
-        try:
-            headers = {'accept': 'text/html'}
-            r = requests.get(link.get('url'), timeout=2, headers=headers)
-            if r.status_code == 200:
-                html = copy(r.content)
-            else:
-                html = None
-        except requests.RequestException as e:
-            print(e, file=sys.stderr)
-            # only follow OK links that contain html
-        finally:
-            if r is not None:
-                r.close()
-            return html
-
-    def _getTree(self, html, base_url):
+    def _getTree(self, base_url, html):
         # try to build lxml tree with unicoded html
         tree = None
         try:
@@ -118,6 +93,7 @@ class Scraper(threading.Thread):
             damn_html = UnicodeDammit(html)
             # convert html into lxml tree
             tree = parser.fromstring(damn_html.unicode_markup)
+            del damn_html
             # make all links absolute based on url
             tree.make_links_absolute(base_url)
         except Exception as e:
@@ -129,15 +105,13 @@ class Scraper(threading.Thread):
         """
         override threading run function
         """
+        print('Parser: {}'.format(os.getpid()))
         while True:
             # gets link from queue
-            link = self._getLink()
-            html = None
-            if link is not None:
-                html = self._getHtml(link)
+            (link, html) = self.html_queue.get()
             tree = None
             if html is not None:
-                tree = self._getTree(html, link.get('url'))
+                tree = self._getTree(link['url'], html)
             if tree is not None:
                 # search for keyword in html text
                 link['keyword'] = False
@@ -145,12 +119,65 @@ class Scraper(threading.Thread):
                     # trigger script interrupt with keyword
                     link['keyword'] = True
                 # send link to server through stdout
-                print(json.dumps(link))
-                if link.get('level') < int(self.max_levels):
+                # print(json.dumps(link))
+                if link['level'] < int(self.max_levels):
                     links = self._getLinks(tree)
+                    del tree
                     self._addLinks(links, link)
+            del link
             # mark task as done for queue.join
-            self.unvisited.task_done()
+            self.html_queue.task_done()
+
+class Scraper(threading.Thread):
+
+    def __init__(self, html_queue, link_queue):
+
+        # inherit and setup thread variables from input
+        super(Scraper, self).__init__()
+        self.html_queue = html_queue
+        self.link_queue = link_queue
+
+    def _getHtml(self, link):
+        html = None
+    # try to connect to link
+        try:
+            headers = {'accept': 'text/html'}
+            with closing(requests.get(link.get('url'), timeout=2, headers=headers, stream=True)) as r:
+                if r.status_code == 200 \
+                        and int(r.headers.get('content-length', 0)) < MAX_DOWNLOAD_SIZE \
+                        and (r.headers.get('content-type', None).split(';')[0] == 'text/html'
+                             or r.headers.get('content-type', None) is None):
+                    # http://stackoverflow.com/questions/16694907/how-to-download-large-file-in-python-with-requests-py
+                    it = r.iter_content(chunk_size=1024)
+                    html = "{}".format(it.__next__())
+                    if "<html" in html:
+                        for chunk in r.iter_content(chunk_size=1024):
+                            html = "{}{}".format(html, chunk)
+                    else:
+                        html = None
+                else:
+                    html = None
+        except requests.RequestException as e:
+            print(e, file=sys.stderr)
+        finally:
+            # only follow OK links that contain html
+            return html
+        # url = "{}".format(link['url'])
+        # p = Popen(["curl", url], stdout=PIPE)
+        # html = p.communicate()[0]
+
+    def run(self):
+        """
+        override threading run function
+        """
+        print('Thread: {}'.format(os.getpid()))
+        while True:
+            # gets link from queue
+            link = self.link_queue.get()
+            if link is not None:
+                html = self._getHtml(link)
+                self.html_queue.put((link, html))
+            gc.collect()
 
 
 if __name__ == "__main__":
@@ -174,7 +201,9 @@ if __name__ == "__main__":
         # DFS
         # NUM_THREADS = 1
         unvisited_links = LifoQueue()
+
     threads = list()
+    unparsed_html = JoinableQueue()
 
     first_link = dict()
     first_link['url'] = start_url
@@ -185,10 +214,17 @@ if __name__ == "__main__":
 
     # setups and start threads
     for t in range(NUM_THREADS):
-        s = Scraper(unvisited_links, visited_links, visited_lock, max_levels, keyword)
+        s = Scraper(unparsed_html, unvisited_links)
         s.daemon = True
         s.start()
         threads.append(s)
 
-    # wait for queue to be empty and all tasks done, then exit
-    unvisited_links.join()
+    pool = multiprocessing\
+        .Pool(4, Parser(unparsed_html, unvisited_links, visited_links, visited_lock, max_levels, keyword)
+              .run, maxtasksperchild=1)
+
+    sleep(20)
+
+
+# wait for queue to be empty and all tasks done, then exit
+    unparsed_html.join()

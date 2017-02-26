@@ -67,8 +67,8 @@ var shellOptions = {
     mode: 'json',
     pythonPath: './venv/bin/python3',
     pythonOptions: ['-u'],
-    // scriptPath: './scrapys/scrapys/spiders'
-    scriptPath: './scraper/'
+    scriptPath: './scrapys/scrapys/spiders'
+    // scriptPath: './scraper/'
 };
 
 //function called when user connects to server
@@ -89,7 +89,7 @@ io.on('connect', function(socket){
     ];
 
     //create python shell for python bfs scraper
-    shell = new pythonShell('bfs.py', shellOptions);
+    shell = new pythonShell('bfs_wrapper.py', shellOptions);
     //function called when node is received from scraper
     //uploads node to client
     // var i = 0;
