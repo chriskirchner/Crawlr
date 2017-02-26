@@ -5,27 +5,17 @@
 
 import threading
 from bs4 import UnicodeDammit
-# from queue import Queue
-# from queue import LifoQueue
 import requests
 from lxml import html as parser
-import lxml
 import sys
 import json
-from time import sleep
-from copy import copy
 from contextlib import closing
-import objgraph
 import multiprocessing
 from multiprocessing import JoinableQueue
 from multiprocessing import Queue
-import os
-from subprocess import Popen, PIPE
+
 import gc
-import urllib
-import pickle
-import logging
-import pqueue
+
 import pickle
 from queuelib import FifoDiskQueue
 
