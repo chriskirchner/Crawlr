@@ -512,18 +512,26 @@ function click(d){
     else if (d._children.length > 0){
 
     	//update time for all children so they are all visible if possible
-        d._children.forEach(function(child){
-            child.timestamp = NUM++;
-        });
         d.children.forEach(function(child){
             child.timestamp = NUM++;
         });
+        d._children.forEach(function(child){
+            child.timestamp = NUM++;
+        });
+
 
         //move hidden children to list of visible children
 		for (var i=0; i<d._children.length; i++){
 			d._child_count -= d._children[i].child_count;
             d._child_count--;
         }
+
+        //update parents so they don't get absorbed
+        // var p = d.parent;
+        // while (p != null){
+			// p.timestamp = NUM++;
+			// p = p.parent;
+        // }
 
         d.children = d.children.concat(d._children);
         d._children = [];
@@ -544,7 +552,7 @@ function click(d){
     }
 
     //update time for click node so it will not be trimmed
-    // d.timestamp = NUM++;
+    d.timestamp = NUM++;
 
     //update and restyle simulation
     updateGFX(root);
@@ -615,7 +623,9 @@ function styleSuperNode(node){
             d.radius = powerScale(d._child_count) + NODE_RADIUS;
             return d.radius;
         })
-        // .transition().duration(STYLE_TRANSITION_TIME)
+		.style('stroke', 'yellow')
+        .transition().delay(10)
+		.style('stroke', 'red')
 		.style('stroke', 'white')
 		.style('stroke-opacity', 1)
         .style('fill', 'grey')

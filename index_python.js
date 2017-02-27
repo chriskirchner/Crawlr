@@ -75,20 +75,6 @@ var shellOptions = {
 io.on('connect', function(socket){
   console.log('socket: user connected to socket.io');
   var shell = null;
-// <<<<<<< Updated upstream
-// =======
-//   socket.on('reap urls', function(start_node){
-//     console.log('reaping...');
-//     session.url_history.push(start_node);
-//     var casper = spawn('casperjs', ['./scraper/casper_scrape.js']);
-//     var json_string = '';
-//     //http://stackoverflow.com/questions/34178952/continuously-read-json-from-childprocess-stdout
-//     casper.stdout.pipe(stream);
-//     stream.on('data', function(json_node){
-//       console.log(json_node);
-//       socket.emit('node send', json_node);
-//     });
-// >>>>>>> Stashed changes
 
   //function called when user issues a crawl from client
   socket.on('reap urls', function(start_node){

@@ -4,6 +4,8 @@
 # Email: kirchnch@oregonstate.edu
 
 import threading
+from time import sleep
+
 from bs4 import UnicodeDammit
 import requests
 from lxml import html as parser
@@ -152,8 +154,7 @@ class Scraper(threading.Thread):
                 else:
                     html = None
         except requests.RequestException as e:
-            # print(e, file=sys.stderr)
-            pass
+            print(e, file=sys.stderr)
         finally:
             # only follow OK links that contain html
             return html
@@ -222,7 +223,7 @@ if __name__ == "__main__":
                 shutil.rmtree(BUFFER_FILE)
             else:
                 os.remove(BUFFER_FILE)
-            sys.exit()
+        exit()
 
     signal.signal(signal.SIGINT, signal_handler)
 
@@ -250,6 +251,8 @@ if __name__ == "__main__":
         with buffer_lock:
             for _ in range(unvisited_links_out.qsize()):
                 disk_buffer.push(pickle.dumps(unvisited_links_out.get()))
+            # for noe
+        sleep(0.01)
 
         # if unvisited_links_in.qsize() <= 0:
         #     pop = disk_buffer.pop()
