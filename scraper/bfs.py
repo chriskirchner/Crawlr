@@ -13,15 +13,17 @@ from contextlib import closing
 import multiprocessing
 from multiprocessing import JoinableQueue
 from multiprocessing import Queue
-
+import signal
 import gc
-
+import os
 import pickle
 from queuelib import FifoDiskQueue
+from queuelib import LifoDiskQueue
+import shutil
 
-NUM_THREADS = 25
+NUM_THREADS = 24
 MAX_DOWNLOAD_SIZE = 500000
-
+BUFFER_FILE = os.path.join(os.getcwd(), 'tmp')
 
 # scraper class for threading
 class Parser:
@@ -52,7 +54,7 @@ class Parser:
             if link['url'] not in self.visited:
                 self.link_queue.put(link)
                 with self.visited_lock:
-                    self.visited.add(link['url'])
+                    self.visited.add("{}".format(link['url']))
 
     def _getLinks(self, tree):
         """
@@ -117,16 +119,17 @@ class Parser:
                     self._addLinks(links, link)
             del link
             # mark task as done for queue.join
-            self.html_queue.task_done()
+            # gc.collect()
 
 class Scraper(threading.Thread):
 
-    def __init__(self, html_queue, link_queue):
+    def __init__(self, html_queue, link_queue, lock):
 
         # inherit and setup thread variables from input
         super(Scraper, self).__init__()
         self.html_queue = html_queue
         self.link_queue = link_queue
+        self.lock = lock
 
     def _getHtml(self, link):
         html = None
@@ -149,10 +152,12 @@ class Scraper(threading.Thread):
                 else:
                     html = None
         except requests.RequestException as e:
-            print(e, file=sys.stderr)
+            # print(e, file=sys.stderr)
+            pass
         finally:
             # only follow OK links that contain html
             return html
+
         # url = "{}".format(link['url'])
         # p = Popen(["curl", url], stdout=PIPE)
         # html = p.communicate()[0]
@@ -163,12 +168,25 @@ class Scraper(threading.Thread):
         """
         while True:
             # gets link from queue
-            link = self.link_queue.get()
+
+            # link = self.link_queue.get()
+            link = None
+            html = None
+            with self.lock:
+                pop = None
+                try:
+                    pop = self.link_queue.pop()
+                except ValueError as e:
+                    pass
+                if pop is not None and len(pop) > 4:
+                    link = pickle.loads(pop)
             if link is not None:
                 html = self._getHtml(link)
-                self.html_queue.put((link, html))
-            gc.collect()
-
+                if html is not None:
+                    self.html_queue.put((link, html))
+                #     del html
+                # del link
+            # gc.collect()
 
 if __name__ == "__main__":
 
@@ -184,45 +202,59 @@ if __name__ == "__main__":
     # a bloom filter may improve performance with less memory
     visited_links = set()
     # create a queue of unvisited links added by threads as they scrape
-    # if int(search_type) == 1:
-    #     # BFS
-    #     unvisited_links_to_parse = Queue()
-    # else:
-    #     # DFS
-    #     # NUM_THREADS = 1
-    #     unvisited_links = LifoQueue()
+    if int(search_type) == 1:
+        # BFS
+        disk_buffer = FifoDiskQueue(BUFFER_FILE)
+    else:
+        # DFS
+        disk_buffer = LifoDiskQueue(BUFFER_FILE)
 
-    unvisited_links_out = Queue()
     unvisited_links_in = Queue()
+    unvisited_links_out = Queue()
     unparsed_html = JoinableQueue()
-    disk_buffer = FifoDiskQueue("queuefile")
+    buffer_lock = threading.Lock()
+
+
+    def signal_handler(signal, frame):
+        with buffer_lock:
+            disk_buffer.close()
+            if int(search_type) == 1:
+                shutil.rmtree(BUFFER_FILE)
+            else:
+                os.remove(BUFFER_FILE)
+            sys.exit()
+
+    signal.signal(signal.SIGINT, signal_handler)
 
     first_link = dict()
     first_link['url'] = start_url
     first_link['parent_url'] = None
     first_link['level'] = 0
     # add first link to queue
-    unvisited_links_in.put(first_link)
+    disk_buffer.push(pickle.dumps(first_link))
 
     # setups and start threads
     threads = list()
     for t in range(NUM_THREADS):
-        s = Scraper(unparsed_html, unvisited_links_in)
+        s = Scraper(unparsed_html, disk_buffer, buffer_lock)
         s.daemon = True
         s.start()
         threads.append(s)
 
     pool = multiprocessing \
-        .Pool(multiprocessing.cpu_count(), Parser(unparsed_html, unvisited_links_out, visited_links, visited_lock, max_levels, keyword)
+        .Pool(1, Parser(unparsed_html, unvisited_links_out, visited_links, visited_lock, max_levels, keyword)
               .run)
 
     while True:
-        disk_buffer.push(pickle.dumps(unvisited_links_out.get()))
-        if unvisited_links_in.qsize() < 200:
-            for _ in range(100):
-                pop = disk_buffer.pop()
-                if pop is not None and len(pop) > 1:
-                    unvisited_links_in.put(pickle.loads(pop))
+        # for _ in range(unvisited_links_out.qsize()):
+        with buffer_lock:
+            for _ in range(unvisited_links_out.qsize()):
+                disk_buffer.push(pickle.dumps(unvisited_links_out.get()))
+
+        # if unvisited_links_in.qsize() <= 0:
+        #     pop = disk_buffer.pop()
+        #     if pop is not None and len(pop) > 1:
+        #         unvisited_links_in.put(pickle.loads(pop))
 
     # wait for queue to be empty and all tasks done, then exit
     # unvisited_links_in.join()
