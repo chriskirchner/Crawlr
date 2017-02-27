@@ -1,33 +1,28 @@
-/**
- * Script: index.js
- * Description: server code that interfaces with client and scrapers
- * Author: Christiano Vannelli and Chris Kirchner
- * Email: vannellc@oregonstate.edu and kirchnch@oregonstate.edu
- */
-
-
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var io = require('socket.io')(http);
 var spawn = require('child_process').spawn;
-var pythonShell = require('python-shell');
 var session = require('express-session');
+var JSONStream = require('JSONStream');
+var stream = JSONStream.parse();
+
 
 //setup handlebars
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 app.set('port', 8080);
 
-//setup bod parser
+
 var bodyParser = require('body-parser');
 /*needed for post request */
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
 app.use(express.static(__dirname + '/public'));
-//setup session secret
+
 app.use(session({secret:'SuperSecretPassword'}));
 
 session.url_history = [];
@@ -40,15 +35,19 @@ app.get('/',function(req,res){
 
   for (var c in context.url_history)
   {
-    if (context.url_history[c].crawl_type == '0') {
+    if (context.url_history[c].crawl_type == '0')
+    {
+      
       context.url_history[c].crawl_type = "Depth-First";
     }
 
-    else if(context.url_history[c].crawl_type == '1') {
+    else if(context.url_history[c].crawl_type == '1')
+    {
       context.url_history[c].crawl_type = "Breadth-First";
     }
   }
   
+  // console.log(context.url_history);
   res.render('home', context);
 
 });
@@ -62,68 +61,48 @@ app.post('/', function(req, res, next){
   }
 });
 
-//setup python shell options for child_process
-var shellOptions = {
-    mode: 'json',
-    pythonPath: './venv/bin/python3',
-    pythonOptions: ['-u'],
-    // scriptPath: './scrapys/scrapys/spiders'
-    scriptPath: './scraper/'
-};
 
-//function called when user connects to server
+//reaper is the scraper nightmare
+// var reaper = require('./scraper/nightmare');
+
+//scrapman?
+// var scrapman = require('./scraper/scrapman');
+
 io.on('connect', function(socket){
   console.log('socket: user connected to socket.io');
   var shell = null;
-
-  //function called when user issues a crawl from client
   socket.on('reap urls', function(start_node){
-
-    console.log('reaping urls...');
-    //crawl input is pushed to url history
+    console.log('reaping...');
     session.url_history.push(start_node);
-
-    //arguments for child process
-    shellOptions.args = [
-        start_node.url, start_node.max_levels, start_node.keyword, start_node.crawl_type
-    ];
-
-    //create python shell for python bfs scraper
-    // shell = new pythonShell('bfs_wrapper.py', shellOptions);
-    shell = new pythonShell('bfs.py', shellOptions);
-
-      //function called when node is received from scraper
-    //uploads node to client
-    // var i = 0;
-    shell.on('message', function(message){
-      //kill scraper when keyword is found
-      // if (i++ > 400){
-      //     shell.childProcess.kill('SIGINT');
-      // }
-      if (message.keyword){
-        shell.childProcess.kill('SIGINT');
-      }
-      // console.log(message);
-      //send node to client
-      console.log(message);
-      socket.emit('node send', message);
+    var casper = spawn('casperjs', ['./scraper/casper_scrape.js']);
+    var json_string = '';
+    //http://stackoverflow.com/questions/34178952/continuously-read-json-from-childprocess-stdout
+    casper.stdout.pipe(stream);
+    stream.on('data', function(json_node){
+      console.log(json_node);
+      socket.emit('node send', json_node);
     });
-    //function called when error received from scraper
-    shell.on('error', function(err){
-      console.log(err);
-    });
+
+      // casper.stdout.on('data', function(d){
+      //   console.log(d.toString());
+      // });
+
+    // casper.on('end', function(){
+    //   console.log(json_string);
+    // });
+
+    // scrapman(socket, start_node, 2);
+	
   });
-
-  //function called on client disconnect
   socket.on('disconnect', function(){
-    //kills scraper on disconnect
-    if (shell){
-      shell.childProcess.kill('SIGINT');
-    }
   	console.log('user disconnected');
   });
-
+  // process.on('SIGINT', function() {
+  //   socket.close();
+  //   process.exit();
+  // });
 });
+
 
 /*route handler for 404 errors */
 app.use(function(req,res){
@@ -142,7 +121,10 @@ app.use(function(err, req, res, next){
   process.exit();
 });
 
-//finally, setup server
+// app.listen(app.get('port'), function(){
+//   console.log('Express started on http://localhost:' + app.get('port') + '; press Ctrl-C to terminate.');
+// });
+
 http.listen(app.get('port'), function(){
   console.log('Express started on http://localhost:' + app.get('port') + '; press Ctrl-C to terminate.');
 });

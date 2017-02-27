@@ -512,10 +512,10 @@ function click(d){
     else if (d._children.length > 0){
 
     	//update time for all children so they are all visible if possible
-        d._children.forEach(function(child){
+        d.children.forEach(function(child){
             child.timestamp = NUM++;
         });
-        d.children.forEach(function(child){
+        d._children.forEach(function(child){
             child.timestamp = NUM++;
         });
 
@@ -525,9 +525,13 @@ function click(d){
             d._child_count--;
         }
 
+		var p = d.parent;
+		while (p != null){
+			p.timestamp = NUM++;
+		}
+
         d.children = d.children.concat(d._children);
         d._children = [];
-
 
     }
     //collapse node's children
