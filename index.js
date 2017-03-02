@@ -108,12 +108,12 @@ io.on('connect', function(socket){
 
       //function called when node is received from scraper
     //uploads node to client
-    // var i = 0;
+    var i = 0;
     shell.on('message', function(message){
       //kill scraper when keyword is found
-      // if (i++ > 400){
-      //     shell.childProcess.kill('SIGINT');
-      // }
+      if (i++ > 200){
+          shell.childProcess.kill('SIGINT');
+      }
       if (message.keyword){
         shell.childProcess.kill('SIGINT');
       }
@@ -133,6 +133,7 @@ io.on('connect', function(socket){
     //kills scraper on disconnect
     if (shell){
       shell.childProcess.kill('SIGINT');
+      wait(1);
     }
   	console.log('user disconnected');
   });

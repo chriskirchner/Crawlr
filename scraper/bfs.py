@@ -4,6 +4,7 @@
 # Email: kirchnch@oregonstate.edu
 
 import threading
+from random import random
 from time import sleep
 
 from bs4 import UnicodeDammit
@@ -23,9 +24,10 @@ from queuelib import FifoDiskQueue
 from queuelib import LifoDiskQueue
 import shutil
 
-NUM_THREADS = 24
+NUM_THREADS = 100
 MAX_DOWNLOAD_SIZE = 500000
 BUFFER_FILE = os.path.join(os.getcwd(), 'tmp')
+MAX_REQUEST_DELAY = 2
 
 # scraper class for threading
 class Parser:
@@ -135,10 +137,11 @@ class Scraper(threading.Thread):
 
     def _getHtml(self, link):
         html = None
-    # try to connect to link
+
+        # try to connect to link
         try:
             headers = {'accept': 'text/html'}
-            with closing(requests.get(link.get('url'), timeout=2, headers=headers, stream=True)) as r:
+            with closing(requests.get(link.get('url'), timeout=1, headers=headers, stream=True)) as r:
                 if r.status_code == 200 \
                         and int(r.headers.get('content-length', 0)) < MAX_DOWNLOAD_SIZE \
                         and (r.headers.get('content-type', None).split(';')[0] == 'text/html'
@@ -185,6 +188,8 @@ class Scraper(threading.Thread):
                 html = self._getHtml(link)
                 if html is not None:
                     self.html_queue.put((link, html))
+                    # scraper is too fast - causes timeouts
+            sleep(random()*MAX_REQUEST_DELAY)
                 #     del html
                 # del link
             # gc.collect()

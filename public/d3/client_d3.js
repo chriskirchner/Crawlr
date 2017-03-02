@@ -34,7 +34,7 @@ var nodeSvg, linkSvg, nodeEnter, linkEnter;
 var parent_cache = [];
 
 //SCRIPT GLOBALS
-var MAX_NODES = 300,
+var MAX_NODES = 100,
 	NODE_RADIUS = 8,
 	GFX_UPDATE_INTERVAL = 10,
 	KEYWORD_NODE_RADIUS = 12,
@@ -73,6 +73,7 @@ var tip = d3.tip()
         //     .style('r', NODE_RADIUS*1.5);
         html = "<strong>URL:</strong> <span style='color:red'>" + d.url + "</span>" + "<br>" +
 			"<strong>Hidden Count:</strong> <span style='color:red'>" + d._child_count + "</span>"+ "<br>" +
+			"<strong>Timestamp:</strong> <span style='color:red'>" + d.timestamp + "</span>"+ "<br>" +
 			"<strong>Total Count:</strong> <span style='color:red'>" + d.child_count + "</span>" + "<br>" +
         	"<strong>Direct Hidden Count:</strong> <span style='color:red'>" + d._children.length + "</span>";
         return html;
@@ -102,9 +103,7 @@ function setupGFX(){
 
     //setup d3 groups of nodes (websites) and linsk
     // g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-    g = svg.append("g")
-		.attr('width', width)
-		.attr('height', height);
+    g = svg.append("g");
     linkGroup = g.append("g");
     nodeGroup = g.append("g");
 
@@ -163,7 +162,7 @@ var first = 0;
  */
 
 
-function addToTree(root, node){
+function addToTree(node){
 
 	//convert format of node (website page) from scraper to tree for d3
 	var parent = null;
@@ -183,7 +182,8 @@ function addToTree(root, node){
 		//boolean if keyword found in website
 		'keyword': node.keyword,
 		'radius': NODE_RADIUS,
-		'new_supernode': false
+		'new_supernode': false,
+		'mouseover': false
     };
 
     //fix position and root of first node
@@ -239,7 +239,6 @@ function addToTree(root, node){
         }
 	}
 
-    return root;
 }
 
 
@@ -329,48 +328,58 @@ function getLinks(root){
  */
 function addToGFX(node){
 	//add new node to tree ADT
-    root = addToTree(root, node);
+    addToTree(node);
     //update the graphics with new node
     updateGFX(root);
 
     //restyle the graphics with new node
     restyleGFX(root);
     //restart the force layout with new node
-    simulation.alpha(1).restart();
+    simulation.alpha(0.7).restart();
 }
 
 /**
  * trimTree: trims tree of old nodes using recursive post-order traversal in based on MAX_NODE threshold
  * @param root - root of tree
- * @param nodes - list of nodes in tree
+ * @param nodez - list of nodes in tree
  */
-function trimTree(root, nodes){
-	//get "time" of youngest exposed node that needs to be trimmed to expose other node(s)
+function trimTree(nodes) {
+    //get "time" of youngest exposed node that needs to be trimmed to expose other node(s)
+    console.log("___---___");
 	var trimTime = getTrimTime(nodes);
-	//hide all children with times greater or less than trim time
-	function recurse(node){
-		if (node.children) node.children.forEach(recurse);
-		if (node.timestamp <= trimTime){
-
-			//hide node by placing in _children list
-			if (node.parent){
-                var parent = node.parent;
-				if (parent._children.length == 0){
-					parent.new_supernode = true;
-				}
-                parent._children.push(node);
-                parent._child_count += node.child_count;
-                parent._child_count++;
-                var index = parent.children.indexOf(node);
-                parent.children.splice(index, 1);
-
+	console.log("trim time: " + trimTime);
+    //hide all children with times greater or less than trim time
+	var total = 0;
+	var trims = 0;
+	console.log("Total nodes before: " + getNodes(root).length);
+    function recurse(node) {
+    	total++;
+        if (node.children) {
+        	for (var i=node.children.length; i>0; i--){
+        		recurse(node.children[i-1]);
 			}
+		}
+        if (node.timestamp <= trimTime) {
+			trims++;
+			// if (parent._children.length == 0) {
+			//     parent.new_supernode = true;
+			// }
+
+			var parent = node.parent;
+
+			parent._children.push(node);
+			parent._child_count += node.child_count;
+			parent._child_count++;
+			var index = parent.children.indexOf(node);
+			parent.children.splice(index, 1);
 
 		}
-	}
-	recurse(root);
-}
+    }
+    recurse(root);
 
+	//make sure immediate children are visible
+
+}
 
 /**
  * getTrimTime: returns the time at which nodes at or older need to be trimmed
@@ -379,13 +388,10 @@ function trimTree(root, nodes){
  */
 function getTrimTime(nodes){
 	var times = getTimes(nodes);
-	times.sort(function(a,b){
+	times = times.sort(function(a,b){
 		return a-b;
 	});
 	var numNodesToTrim = nodes.length - MAX_NODES;
-	// if (first == 0){
-	// 	console.log(times);
-	// }
 	return times[numNodesToTrim-1];
 }
 
@@ -408,12 +414,12 @@ function updateGFX(root){
 	//get list of nodes in tree
     var nodes = getNodes(root);
     //determine if tree needs to be trimmed to sustain graphic performance
-    if (nodes.length >= MAX_NODES){
-        trimTree(root, nodes);
+    if (nodes.length > MAX_NODES){
+        trimTree(nodes);
 		nodes = getNodes(root);
     }
     //get list of links from tree
-    var links = getLinks(root);
+    links = getLinks(root);
 
     //add link data to d3 link group
     linkSvg = linkGroup.selectAll(".link")
@@ -469,11 +475,13 @@ function updateGFX(root){
 		//show tooltip on hover
         // .on("mouseover", tip.show)
 		.on("mouseover", function(d,i){
-			styleMouseoverNode(d3.select(this), d);
+			d.mouseover = true;
+			styleMouseoverNode(d3.select(this));
             tip.show(d,i);
 		})
         .on("mouseout", function(d){
-            styleMouseoutNode(d3.select(this), d);
+        	d.mouseover = false;
+            styleMouseoutNode(d3.select(this));
             tip.hide(d);
 		})
 		// .on("contextmenu", function(d){
@@ -495,6 +503,44 @@ function updateGFX(root){
     simulation.force("link").links(links);
 }
 
+function expandChildren(parent){
+
+	function recurse(node) {
+		if (node.children) node.children.forEach(recurse);
+		if (node._children) {
+            node._children.forEach(recurse);
+			for (var i=0; i<node._children.length; i++){
+				node._child_count -= node._children[i].child_count;
+				node._child_count--;
+			}
+			node.children = node.children.concat(node._children);
+			node._children = [];
+		}
+		node.timestamp = NUM++;
+	}
+
+	recurse(parent)
+
+	//make sure immediate children are visible
+	if (parent.children){
+		parent.children.forEach(function(c){
+			c.timestamp = NUM++;
+		});
+	}
+
+}
+
+// function getAllNodes(start){
+// 	var nodez = [];
+// 	function recurse(node){
+// 		if (node.children) node.children.forEach(recurse);
+// 		if (node._children) node._children.forEach(recurse);
+// 		nodez.push(node);
+// 	}
+// 	recurse(start);
+// 	return nodez;
+// }
+
 /**
  * click: function called on clicking node
  * @param d - data of clicked node
@@ -511,30 +557,35 @@ function click(d){
     //expose hidden children
     else if (d._children.length > 0){
 
+    	expandChildren(d);
+
+
     	//update time for all children so they are all visible if possible
-        d.children.forEach(function(child){
-            child.timestamp = NUM++;
-        });
-        d._children.forEach(function(child){
-            child.timestamp = NUM++;
-        });
+        // d.children.forEach(function(child){
+         //    child.timestamp = NUM++;
+        // });
+        // d._children.forEach(function(child){
+         //    child.timestamp = NUM++;
+        // });
 
 
         //move hidden children to list of visible children
-		for (var i=0; i<d._children.length; i++){
-			d._child_count -= d._children[i].child_count;
-            d._child_count--;
-        }
-
-        //update parents so they don't get absorbed
-        // var p = d.parent;
-        // while (p != null){
-			// p.timestamp = NUM++;
-			// p = p.parent;
+        // for (var i=0; i<d._children.length; i++){
+			// d._child_count -= d._children[i].child_count;
+        //     d._child_count--;
         // }
 
-        d.children = d.children.concat(d._children);
-        d._children = [];
+        //update parents so they don't get absorbed
+        var p = d.parent;
+        while (p != null){
+			p.timestamp = NUM++;
+			p = p.parent;
+        }
+
+        // d.timestamp = NUM++;
+        //
+        // d.children = d.children.concat(d._children);
+        // d._children = [];
 
 
     }
@@ -557,7 +608,7 @@ function click(d){
     //update and restyle simulation
     updateGFX(root);
     restyleGFX(root);
-    simulation.alpha(1).restart();
+    simulation.alpha(0.1).restart();
 }
 
 //scales superNodes based on the number of their children
@@ -577,18 +628,18 @@ function restyleGFX(root) {
         	styleKeywordNode(svgNode);
 		}
 		//styles the super node with hidden children
-        if (node._children.length > 0 && node.new_supernode == false) {
-            styleSuperNode(svgNode);
+		if (node._children.length > 0 && node.new_supernode == false) {
             node.collapsed = true;
+            styleSuperNode(svgNode);
         }
         else if (node._children.length > 0 && node.new_supernode == true){
-        	styleNewSuperNode(svgNode);
-        	node.new_supernode = false;
+            node.new_supernode = false;
+            styleNewSuperNode(svgNode);
 		}
         //styles regular node
         else if (node._children.length == 0 && node.collapsed == true) {
-            styleRegNode(svgNode);
             node.collapsed = false;
+            styleRegNode(svgNode);
         }
 
     }
@@ -607,7 +658,14 @@ function styleKeywordNode(node){
         	d.radius = KEYWORD_NODE_RADIUS;
             return d.radius;
         })
-        .style('fill', 'red')
+        .style('fill', function(d){
+        	if (d.mouseover){
+        		return 'green'
+			}
+			else {
+        		return 'red'
+			}
+		})
         .style('fill-opacity', 0.2)
 		.style('stroke','#eb0000');
 }
@@ -617,19 +675,30 @@ function styleKeywordNode(node){
  * @param node_selector - css selector for node
  */
 function styleSuperNode(node){
-    node
-        .style('stroke-width', 5)
-        .attr('r', function(d){
-            d.radius = powerScale(d._child_count) + NODE_RADIUS;
-            return d.radius;
-        })
-		.style('stroke', 'yellow')
-        .transition().delay(10)
-		.style('stroke', 'red')
-		.style('stroke', 'white')
-		.style('stroke-opacity', 1)
-        .style('fill', 'grey')
-        .style('fill-opacity', 0.2);
+	var data = node.datum();
+	if (data.mouseover){
+		styleMouseoverNode(node);
+	}
+	// else if (data.url == root.url){
+	// 	styleRootNode(node);
+	// }
+	else {
+        node
+            .style('stroke-width', 5)
+            .attr('r', function(d){
+                d.radius = powerScale(d._child_count) + NODE_RADIUS;
+                return d.radius;
+            })
+            .style('stroke', 'white')
+            .style('stroke-opacity', 1)
+            .style('fill', 'grey')
+            .style('fill-opacity', 0.2);
+	}
+}
+
+function styleRootNode(node){
+	node
+		.style('stroke', 'gold');
 }
 
 /**
@@ -637,17 +706,26 @@ function styleSuperNode(node){
  * @param node - css selector for node
  */
 function styleRegNode(node){
-    node
-        .style('stroke-width', 1)
-		// .transition().duration(STYLE_TRANSITION_TIME)
-        .attr('r', function(d){
-        	d.radius = NODE_RADIUS;
-        	return NODE_RADIUS;
-        })
-        .style('fill', 'white')
-		.style('stroke', 'gray')
-		.style('stroke-opacity', 0.5)
-		.style('fill-opacity', 1)
+	var data = node.datum();
+	if (data.mouseover){
+		styleMouseoverNode(node)
+	}
+    // else if (data.url == root.url){
+    //     styleRootNode(node);
+    // }
+	else {
+        node
+            .style('stroke-width', 1)
+            // .transition().duration(STYLE_TRANSITION_TIME)
+            .attr('r', function(d){
+                d.radius = NODE_RADIUS;
+                return NODE_RADIUS;
+            })
+            .style('fill', 'white')
+            .style('stroke', 'gray')
+            .style('stroke-opacity', 0.5)
+            .style('fill-opacity', 1)
+	}
 }
 
 function styleNewSuperNode(node){
@@ -657,17 +735,24 @@ function styleNewSuperNode(node){
             d.radius = powerScale(d._child_count) + NODE_RADIUS;
             return d.radius;
         })
-        // .transition().duration(200)
-        .style('stroke', '8A0707')
+        .style('fill-opacity', 0.2)
+		.style('stroke', '#0a74e4')
+		.transition().duration(500)
+		.style('stroke', '#a9e6f8')
+		.transition().duration(200)
+        .style('stroke', 'white')
+        // .transition().delay(500).duration(200)
         .style('stroke-opacity', 1)
-        .style('fill', 'grey')
-        .style('fill-opacity', 0.2);
+        .style('fill', 'grey');
+
 }
 
-function styleMouseoverNode(node, data){
+function styleMouseoverNode(node){
 
 	var radius = NODE_RADIUS;
-	if (data._children.length > 0){
+	var data = node.datum();
+
+	if (data._children != null && data._children.length > 0){
 		radius = 1.1*data.radius;
 	}
 	else {
@@ -685,17 +770,18 @@ function styleMouseoverNode(node, data){
 			// .transition().duration(STYLE_TRANSITION_TIME)
 			.style('fill-opacity', 0.5)
             .style('fill', '266ca9')
-            .style('stroke', '266ca9')
+            .style('stroke', 'lightblue')
 			.style('stroke-opacity', 1)
             .attr('r', radius);
 	}
 }
 
-function styleMouseoutNode(node, data){
+function styleMouseoutNode(node){
+	var data = node.datum();
 	if (data.keyword == true){
         styleKeywordNode(node);
 	}
-	else if (data._children.length > 0){
+	else if (data._children && data._children.length > 0){
 		styleSuperNode(node);
 	}
 	else {
