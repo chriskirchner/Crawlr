@@ -558,6 +558,8 @@ function click(d){
     else if (d._children.length > 0){
 
     	expandChildren(d);
+    	//make parent visible
+
 
 
     	//update time for all children so they are all visible if possible
@@ -576,11 +578,11 @@ function click(d){
         // }
 
         //update parents so they don't get absorbed
-        var p = d.parent;
-        while (p != null){
-			p.timestamp = NUM++;
-			p = p.parent;
-        }
+        // var p = d.parent;
+        // while (p != null){
+			// p.timestamp = NUM++;
+			// p = p.parent;
+        // }
 
         // d.timestamp = NUM++;
         //
@@ -608,7 +610,7 @@ function click(d){
     //update and restyle simulation
     updateGFX(root);
     restyleGFX(root);
-    simulation.alpha(0.1).restart();
+    simulation.alpha(1).velocityDecay(0.6).restart();
 }
 
 //scales superNodes based on the number of their children

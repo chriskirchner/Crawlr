@@ -101,6 +101,7 @@ io.on('connect', function(socket){
     shellOptions.args = [
         start_node.url, start_node.max_levels, start_node.keyword, start_node.crawl_type
     ];
+    shellOptions.detached = true;
 
     //create python shell for python bfs scraper
     // shell = new pythonShell('bfs_wrapper.py', shellOptions);
@@ -111,11 +112,12 @@ io.on('connect', function(socket){
     var i = 0;
     shell.on('message', function(message){
       //kill scraper when keyword is found
-      if (i++ > 200){
-          shell.childProcess.kill('SIGINT');
+      if (i++ > 400){
+          process.kill(-shell.childProcess.pid);
       }
       if (message.keyword){
-        shell.childProcess.kill('SIGINT');
+          //http://azimi.me/2014/12/31/kill-child_process-node-js.html
+          process.kill(-shell.childProcess.pid);
       }
       // console.log(message);
       //send node to client
@@ -132,8 +134,8 @@ io.on('connect', function(socket){
   socket.on('disconnect', function(){
     //kills scraper on disconnect
     if (shell){
-      shell.childProcess.kill('SIGINT');
-      wait(1);
+      // shell.childProcess.kill('SIGINT');
+        process.kill(-shell.childProcess.pid);
     }
   	console.log('user disconnected');
   });
