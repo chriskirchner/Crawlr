@@ -266,3 +266,5 @@ if __name__ == "__main__":
 
     # wait for queue to be empty and all tasks done, then exit
     # unvisited_links_in.join()
+    pool.join()
+

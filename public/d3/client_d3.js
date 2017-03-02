@@ -34,7 +34,7 @@ var nodeSvg, linkSvg, nodeEnter, linkEnter;
 var parent_cache = [];
 
 //SCRIPT GLOBALS
-var MAX_NODES = 100,
+var MAX_NODES = 250,
 	NODE_RADIUS = 8,
 	GFX_UPDATE_INTERVAL = 10,
 	KEYWORD_NODE_RADIUS = 12,
@@ -149,6 +149,7 @@ function clearGFX(){
 	links = [];
 	root = null;
 	parent_cache = [];
+	buffer = [];
 }
 
 var first = 0;
@@ -334,8 +335,10 @@ function addToGFX(node){
 
     //restyle the graphics with new node
     restyleGFX(root);
+	//style new node;
+	styleNewNode(d3.select('[href="'+node.url+'"]'));
     //restart the force layout with new node
-    simulation.alpha(0.7).restart();
+    simulation.alpha(0.7).velocityDecay(0.4).restart();
 }
 
 /**
@@ -345,27 +348,22 @@ function addToGFX(node){
  */
 function trimTree(nodes) {
     //get "time" of youngest exposed node that needs to be trimmed to expose other node(s)
-    console.log("___---___");
 	var trimTime = getTrimTime(nodes);
-	console.log("trim time: " + trimTime);
     //hide all children with times greater or less than trim time
-	var total = 0;
-	var trims = 0;
-	console.log("Total nodes before: " + getNodes(root).length);
     function recurse(node) {
-    	total++;
         if (node.children) {
         	for (var i=node.children.length; i>0; i--){
         		recurse(node.children[i-1]);
 			}
 		}
         if (node.timestamp <= trimTime) {
-			trims++;
-			// if (parent._children.length == 0) {
-			//     parent.new_supernode = true;
-			// }
+            var parent = node.parent;
 
-			var parent = node.parent;
+            //color new nodes for coolness
+            if (parent._children.length == 0) {
+			    parent.new_supernode = true;
+			}
+
 
 			parent._children.push(node);
 			parent._child_count += node.child_count;
@@ -376,6 +374,7 @@ function trimTree(nodes) {
 		}
     }
     recurse(root);
+    console.log(getNodes(root).length);
 
 	//make sure immediate children are visible
 
@@ -578,11 +577,11 @@ function click(d){
         // }
 
         //update parents so they don't get absorbed
-        // var p = d.parent;
-        // while (p != null){
-			// p.timestamp = NUM++;
-			// p = p.parent;
-        // }
+        var p = d.parent;
+        while (p != null){
+			p.timestamp = NUM++;
+			p = p.parent;
+        }
 
         // d.timestamp = NUM++;
         //
@@ -610,7 +609,7 @@ function click(d){
     //update and restyle simulation
     updateGFX(root);
     restyleGFX(root);
-    simulation.alpha(1).velocityDecay(0.6).restart();
+    simulation.alpha(0.5).velocityDecay(0.9).restart();
 }
 
 //scales superNodes based on the number of their children
@@ -738,15 +737,53 @@ function styleNewSuperNode(node){
             return d.radius;
         })
         .style('fill-opacity', 0.2)
-		.style('stroke', '#0a74e4')
+		// .style('stroke', '#0a74e4')
+		// .style('stroke', d3.rgb(
+		// 	Math.round(Math.random()*255),
+		// 	Math.round(Math.random()*255),
+		// 	Math.round(Math.random()*255))
+		// )
+		.style('stroke', d3.interpolateBuPu(Math.random()))
 		.transition().duration(500)
-		.style('stroke', '#a9e6f8')
-		.transition().duration(200)
+		// .style('stroke', '#a9e6f8')
+        // .style('stroke', d3.rgb(
+         //    Math.round(Math.random()*255),
+         //    Math.round(Math.random()*255),
+         //    Math.round(Math.random()*255))
+        // )
+        // .transition().duration(200)
         .style('stroke', 'white')
         // .transition().delay(500).duration(200)
         .style('stroke-opacity', 1)
         .style('fill', 'grey');
 
+}
+
+function styleNewNode(node){
+	node
+        // .attr('r', function(d){
+        //     d.radius = powerScale(d._child_count) + NODE_RADIUS;
+        //     return d.radius;
+        // })
+        // .style('fill-opacity', 0.2)
+        // .style('stroke', '#0a74e4')
+        // .style('fill', d3.rgb(
+        //     Math.round(Math.random()*255),
+        //     Math.round(Math.random()*255),
+        //     Math.round(Math.random()*255))
+        // )
+		.style('fill', d3.interpolateBlues(Math.random()))
+        .transition().duration(5000)
+    // .style('stroke', '#a9e6f8')
+    //     .style('fill', d3.rgb(
+    //         Math.round(Math.random()*255),
+    //         Math.round(Math.random()*255),
+    //         Math.round(Math.random()*255))
+    //     )
+    //     .transition().duration(200)
+        // .transition().delay(500).duration(200)
+        .style('stroke-opacity', 1)
+        .style('fill', 'white');
 }
 
 function styleMouseoverNode(node){

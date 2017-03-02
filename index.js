@@ -112,12 +112,15 @@ io.on('connect', function(socket){
     var i = 0;
     shell.on('message', function(message){
       //kill scraper when keyword is found
-      if (i++ > 400){
+      if (i++ > 2000){
           process.kill(-shell.childProcess.pid);
+          shell = null;
+
       }
       if (message.keyword){
           //http://azimi.me/2014/12/31/kill-child_process-node-js.html
           process.kill(-shell.childProcess.pid);
+          shell = null;
       }
       // console.log(message);
       //send node to client
@@ -128,14 +131,21 @@ io.on('connect', function(socket){
     shell.on('error', function(err){
       console.log(err);
     });
+    shell.on('close', function(err){
+      console.log(err);
+    })
   });
+
 
   //function called on client disconnect
   socket.on('disconnect', function(){
     //kills scraper on disconnect
     if (shell){
       // shell.childProcess.kill('SIGINT');
-        process.kill(-shell.childProcess.pid);
+        if (shell){
+            process.kill(-shell.childProcess.pid);
+            shell = null;
+        }
     }
   	console.log('user disconnected');
   });
