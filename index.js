@@ -114,9 +114,11 @@ io.on('connect', function(socket){
       //kill scraper when keyword is found
       if (i++ > 2000){
           process.kill(-shell.childProcess.pid);
+          shell = null;
           // shell.childProcess.kill('SIGTERM');
       }
       if (message.keyword){
+          shell = null;
           //http://azimi.me/2014/12/31/kill-child_process-node-js.html
           process.kill(-shell.childProcess.pid);
           // shell.childProcess.kill('SIGTERM');

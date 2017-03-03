@@ -24,7 +24,7 @@ from queuelib import FifoDiskQueue
 from queuelib import LifoDiskQueue
 import shutil
 
-NUM_THREADS = 100
+NUM_THREADS = 50
 MAX_DOWNLOAD_SIZE = 500000
 BUFFER_FILE = os.path.join(os.getcwd(), 'tmp')
 MAX_REQUEST_DELAY = 2
