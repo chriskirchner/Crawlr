@@ -74,7 +74,6 @@ var shellOptions = {
 //function called when user connects to server
 io.on('connect', function(socket){
   console.log('socket: user connected to socket.io');
-  var shell = null;
 // <<<<<<< Updated upstream
 // =======
 //   socket.on('reap urls', function(start_node){
@@ -91,6 +90,7 @@ io.on('connect', function(socket){
 // >>>>>>> Stashed changes
 
   //function called when user issues a crawl from client
+  var shell = null;
   socket.on('reap urls', function(start_node){
 
     console.log('reaping urls...');
@@ -101,7 +101,7 @@ io.on('connect', function(socket){
     shellOptions.args = [
         start_node.url, start_node.max_levels, start_node.keyword, start_node.crawl_type
     ];
-    shellOptions.detached = true;
+    // shellOptions.detached = true;
 
     //create python shell for python bfs scraper
     // shell = new pythonShell('bfs_wrapper.py', shellOptions);
@@ -112,15 +112,14 @@ io.on('connect', function(socket){
     var i = 0;
     shell.on('message', function(message){
       //kill scraper when keyword is found
-      if (i++ > 2000){
-          process.kill(-shell.childProcess.pid);
-          shell = null;
-
+      if (i++ > 50){
+          // process.kill(-shell.childProcess.pid);
+          shell.childProcess.kill('SIGTERM');
       }
       if (message.keyword){
           //http://azimi.me/2014/12/31/kill-child_process-node-js.html
-          process.kill(-shell.childProcess.pid);
-          shell = null;
+          // process.kill(-shell.childProcess.pid);
+          shell.childProcess.kill('SIGTERM');
       }
       // console.log(message);
       //send node to client
@@ -133,6 +132,12 @@ io.on('connect', function(socket){
     });
     shell.on('close', function(err){
       console.log(err);
+    });
+    shell.on('exit', function(){
+      shell = null;
+    });
+    shell.childProcess.on('SIGTERM', function(){
+      shell = null;
     })
   });
 
@@ -141,11 +146,8 @@ io.on('connect', function(socket){
   socket.on('disconnect', function(){
     //kills scraper on disconnect
     if (shell){
-      // shell.childProcess.kill('SIGINT');
-        if (shell){
-            process.kill(-shell.childProcess.pid);
-            shell = null;
-        }
+        // process.kill(-shell.childProcess.pid);
+        shell.childProcess.kill('SIGTERM');
     }
   	console.log('user disconnected');
   });

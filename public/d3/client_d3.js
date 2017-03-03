@@ -609,7 +609,28 @@ function click(d){
     //update and restyle simulation
     updateGFX(root);
     restyleGFX(root);
+    styleClickedNode(d3.select('[href="'+d.url+'"]'));
     simulation.alpha(0.5).velocityDecay(0.9).restart();
+}
+
+function styleClickedNode(node){
+    node
+        .style('stroke-width', 5)
+        // .transition().duration(STYLE_TRANSITION_TIME)
+        .attr('r', function(d){
+            d.radius = NODE_RADIUS;
+            return NODE_RADIUS;
+        })
+		.transition()
+        .style('stroke-opacity', 0.5)
+        .style('fill-opacity', 1)
+        .style('fill', '#266ca9')
+        .style('stroke', '#266ca9')
+		.transition().duration(2500)
+		.style('fill', 'white')
+        .style('stroke-width', 1)
+        .style('stroke', 'gray');
+
 }
 
 //scales superNodes based on the number of their children
@@ -729,6 +750,12 @@ function styleRegNode(node){
 	}
 }
 
+
+
+function styleClickedSuperNode(node){
+
+}
+
 function styleNewSuperNode(node){
     node
         .style('stroke-width', 5)
@@ -743,8 +770,8 @@ function styleNewSuperNode(node){
 		// 	Math.round(Math.random()*255),
 		// 	Math.round(Math.random()*255))
 		// )
-		.style('stroke', d3.interpolateBuPu(Math.random()))
-		.transition().duration(500)
+		.style('stroke', d3.interpolatePurples(getRandFloat(0.7, 1)))
+		.transition().duration(5000)
 		// .style('stroke', '#a9e6f8')
         // .style('stroke', d3.rgb(
          //    Math.round(Math.random()*255),
@@ -757,6 +784,11 @@ function styleNewSuperNode(node){
         .style('stroke-opacity', 1)
         .style('fill', 'grey');
 
+}
+
+//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+function getRandFloat(min, max){
+	return Math.random()*(max -min)+min;
 }
 
 function styleNewNode(node){
@@ -772,7 +804,7 @@ function styleNewNode(node){
         //     Math.round(Math.random()*255),
         //     Math.round(Math.random()*255))
         // )
-		.style('fill', d3.interpolateBlues(Math.random()))
+		.style('fill', d3.interpolateBlues(getRandFloat(0.5, 1)))
         .transition().duration(5000)
     // .style('stroke', '#a9e6f8')
     //     .style('fill', d3.rgb(
@@ -808,7 +840,7 @@ function styleMouseoverNode(node){
             .style('stroke-width', 2)
 			// .transition().duration(STYLE_TRANSITION_TIME)
 			.style('fill-opacity', 0.5)
-            .style('fill', '266ca9')
+            .style('fill', '#266ca9')
             .style('stroke', 'lightblue')
 			.style('stroke-opacity', 1)
             .attr('r', radius);

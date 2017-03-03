@@ -208,11 +208,18 @@ if __name__ == "__main__":
     # a bloom filter may improve performance with less memory
     visited_links = set()
     # create a queue of unvisited links added by threads as they scrape
+
+
+    # if os.path.exists(BUFFER_FILE):
+    #     shutil.rmtree(BUFFER_FILE)
+    #     if os.path.exists(BUFFER_FILE):
+    # os.remove(BUFFER_FILE)
+
     if int(search_type) == 1:
-        # BFS
+        # BFS / DIR
         disk_buffer = FifoDiskQueue(BUFFER_FILE)
     else:
-        # DFS
+        # DFS / FILE
         disk_buffer = LifoDiskQueue(BUFFER_FILE)
 
     unvisited_links_in = Queue()
@@ -221,16 +228,7 @@ if __name__ == "__main__":
     buffer_lock = threading.Lock()
 
 
-    def signal_handler(signal, frame):
-        with buffer_lock:
-            disk_buffer.close()
-            if int(search_type) == 1:
-                shutil.rmtree(BUFFER_FILE)
-            else:
-                os.remove(BUFFER_FILE)
-        exit()
 
-    signal.signal(signal.SIGINT, signal_handler)
 
     first_link = dict()
     first_link['url'] = start_url
@@ -250,6 +248,24 @@ if __name__ == "__main__":
     pool = multiprocessing \
         .Pool(1, Parser(unparsed_html, unvisited_links_out, visited_links, visited_lock, max_levels, keyword)
               .run)
+
+
+    def signal_handler(signal, frame):
+        with buffer_lock:
+            disk_buffer.close()
+            if int(search_type) == 1:
+                # BFS / DIR
+                if os.path.exists(BUFFER_FILE):
+                    shutil.rmtree(BUFFER_FILE)
+            else:
+                # DFS / FILE
+                if os.path.exists(BUFFER_FILE):
+                    os.remove(BUFFER_FILE)
+        pool.terminate()
+        exit()
+
+    signal.signal(signal.SIGTERM, signal_handler)
+
 
     while True:
         # for _ in range(unvisited_links_out.qsize()):
