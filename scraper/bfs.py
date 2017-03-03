@@ -210,10 +210,10 @@ if __name__ == "__main__":
     # create a queue of unvisited links added by threads as they scrape
 
 
-    # if os.path.exists(BUFFER_FILE):
-    #     shutil.rmtree(BUFFER_FILE)
-    #     if os.path.exists(BUFFER_FILE):
-    # os.remove(BUFFER_FILE)
+    if os.path.isdir(BUFFER_FILE):
+        shutil.rmtree(BUFFER_FILE)
+    elif os.path.isfile(BUFFER_FILE):
+        os.remove(BUFFER_FILE)
 
     if int(search_type) == 1:
         # BFS / DIR
@@ -253,18 +253,20 @@ if __name__ == "__main__":
     def signal_handler(signal, frame):
         with buffer_lock:
             disk_buffer.close()
-            if int(search_type) == 1:
-                # BFS / DIR
-                if os.path.exists(BUFFER_FILE):
-                    shutil.rmtree(BUFFER_FILE)
-            else:
-                # DFS / FILE
-                if os.path.exists(BUFFER_FILE):
-                    os.remove(BUFFER_FILE)
+        if int(search_type) == 1:
+            # BFS / DIR
+            if os.path.exists(BUFFER_FILE):
+                shutil.rmtree(BUFFER_FILE)
+        else:
+            # DFS / FILE
+            if os.path.exists(BUFFER_FILE):
+                os.remove(BUFFER_FILE)
         pool.terminate()
+        pool.join()
         exit()
 
     signal.signal(signal.SIGTERM, signal_handler)
+
 
 
     while True:
@@ -282,5 +284,5 @@ if __name__ == "__main__":
 
     # wait for queue to be empty and all tasks done, then exit
     # unvisited_links_in.join()
-    pool.join()
+
 
