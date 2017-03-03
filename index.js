@@ -47,7 +47,19 @@ app.get('/',function(req,res){
     else if(context.url_history[c].crawl_type == '1') {
       context.url_history[c].crawl_type = "Breadth-First";
     }
+
+    if (context.url_history[c].visual_type == '0') {
+      context.url_history[c].visual_type = "Graph";
+    }
+
+    else if(context.url_history[c].visual_type == '1') {
+      context.url_history[c].visual_type = "Circle Packing";
+    }
+
+
   }
+
+
   
   res.render('home', context);
 
@@ -101,6 +113,7 @@ io.on('connect', function(socket){
       }
 
       message.crawl_type = start_node.crawl_type;
+      message.visual_type = start_node.visual_type;
       console.log(message);
       //send node to client
       socket.emit('node send', message);

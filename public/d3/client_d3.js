@@ -82,7 +82,7 @@ var tip2 = d3.tip()
  * sets up the d3 graphics layout of elements
  */
 
-function setupGFX_BFS(){
+function setupGFX_Graph(){
 
     //setup viewport with width and height
 
@@ -120,8 +120,9 @@ function setupGFX_BFS(){
 }
 
 
-function setupGFX_DFS(){
+function setupGFX_Pack(){
 
+    
     svg = d3.select("section")
     .append("svg")
     .attr('width', width)
@@ -322,23 +323,23 @@ function getLinks(root){
  */
 function addToGFX(node){
 
-    if (node.crawl_type == '1')
+    if (node.visual_type == '0')
     {
         //add new node to tree ADT
         root = addToTree(root, node);
         //update the graphics with new node
-        updateGFX_BFS(root);
+        updateGFX_Graph(root);
         //restyle the graphics with new node
         restyleGFX(root);
         //restart the force layout with new node
         simulation.alpha(1).restart();
     }
-    else if (node.crawl_type == '0')
+    else if (node.visual_type == '1')
     {
         //add new node to tree ADT
         root = addToTree(root, node);
         //update the graphics with new node
-        updateGFX_DFS(root);
+        updateGFX_Pack(root);
         
     }
 	
@@ -412,14 +413,14 @@ function getTrimTime(nodes){
 function getTimes(nodes){
 	return nodes.map(function(node){
 		return node.timestamp;
-	})
+	});
 }
 
 /**
  * updateGFX: updates the d3 force simulation graphics
  * @param root - root of tree ADT
  */
-function updateGFX_BFS(root){
+function updateGFX_Graph(root){
 	//get list of nodes in tree
     var nodes = getNodes(root);
     //determine if tree needs to be trimmed to sustain graphic performance
@@ -495,10 +496,10 @@ function updateGFX_BFS(root){
 }
 
 
-function updateGFX_DFS(root)
+function updateGFX_Pack(root)
 {
     svg.remove();
-    setupGFX_DFS();
+    setupGFX_Pack();
     root = d3.hierarchy(root)
       .sum(function(d) { return d.size; })
       .sort(function(a, b) { return b.value - a.value; });
@@ -619,7 +620,7 @@ function click(d){
     // d.timestamp = NUM++;
 
     //update and restyle simulation
-    updateGFX_BFS(root);
+    updateGFX_Graph(root);
     restyleGFX(root);
     simulation.alpha(1).restart();
 }
@@ -831,6 +832,7 @@ $(document).ready(function(){
 		user_input.keyword = $('#search_term').val();
 		user_input.max_levels = $('#levels').val();
 		user_input.crawl_type = $('#crawl_type').val();
+        user_input.visual_type = $('#visual_type').val();
 		user_input.level = 0;
 		user_input.parent = null;
 
@@ -839,16 +841,17 @@ $(document).ready(function(){
 
 		//upload node from server and add to buffer
 		socket.on('node send', function(node){
-            if (node.parent === null && node.crawl_type == '0')
+            if (node.parent === null && node.visual_type == '0')
             {
-                setupGFX_DFS();
+                setupGFX_Graph();
             }
-            else if (node.parent === null && node.crawl_type == '1')
+            else if (node.parent === null && node.visual_type == '1')
             {
-                setupGFX_BFS();
+                setupGFX_Pack();
             }
 
 			bufferNode(node);
+
         });
 
 		//function called on server disconnect

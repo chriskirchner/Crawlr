@@ -56,17 +56,23 @@
                       </p>
                       <p>
                         <label for="levels">Levels</label>
-                        <input type="number" class="form-control" name="levels" id="levels" placeholder="2">
-                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <input type="number" class="form-control" name="levels" id="levels" placeholder="2" min="1">
+                       &nbsp;&nbsp;&nbsp;
                         <label for="crawl_type">Crawl Type</label>
                         <select name="crawl_type" id="crawl_type">
                           <option value="0">Depth-First</option>
                           <option value="1">Breadth-First</option>
                         </select>
+                         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <label for="visual_type">Visualization</label>
+                        <select name="visual_type" id="visual_type">
+                          <option value="0">Graph</option>
+                          <option value="1">Circle Packing</option>
+                        </select>
                     </div>
                     </p>
                     <p>
-                      <input type="submit" class="btn btn-primary" name="crawlSubmit" id="crawlSubmit" value="Crawl">
+                      <input type="submit" class="btn btn-primary" name="crawlSubmit" id="crawlSubmit" value="Crawl" disabled="disabled" title= "URL must have 'http://' or 'https://'">
                     </p>
 
                 </form>
@@ -79,7 +85,7 @@
                 <select name="url_history" id="url_history2">
                 <option selected="selected"></option>
                 {{#each url_history}}
-                  <option>URL: {{this.url}} | Search Term: {{this.keyword}} | Levels: {{this.max_levels}} | Crawl Type: {{this.crawl_type}}</option>
+                  <option>URL: {{this.url}} | Search Term: {{this.keyword}} | Levels: {{this.max_levels}} | Crawl Type: {{this.crawl_type}} | Visualization: {{this.visual_type}}</option>
                 {{/each}}  
                 </select>
              <input type="submit" class="btn btn-primary btn-xs" name="resetSubmit" id="resetSubmit" value="Clear History">
