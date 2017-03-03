@@ -112,7 +112,7 @@ io.on('connect', function(socket){
     var i = 0;
     shell.on('message', function(message){
       //kill scraper when keyword is found
-      if (i++ > 50){
+      if (i++ > 2000){
           // process.kill(-shell.childProcess.pid);
           shell.childProcess.kill('SIGTERM');
       }

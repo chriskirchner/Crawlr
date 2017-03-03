@@ -52,6 +52,7 @@ var TICKS_TO_SKIP = 0;
 
 //global to hold "timestamp" for nodes to implement revolving force layout
 var NUM = 0;
+var TOTAL_NODES = 0;
 
 /**
  * creates d3 tool tip (development)
@@ -328,6 +329,7 @@ function getLinks(root){
  * @param node - new node from scraper
  */
 function addToGFX(node){
+	TOTAL_NODES++;
 	//add new node to tree ADT
     addToTree(node);
     //update the graphics with new node
@@ -771,7 +773,7 @@ function styleNewSuperNode(node){
 		// 	Math.round(Math.random()*255))
 		// )
 		.style('stroke', d3.interpolatePurples(getRandFloat(0.7, 1)))
-		.transition().duration(5000)
+		.transition().duration(10000)
 		// .style('stroke', '#a9e6f8')
         // .style('stroke', d3.rgb(
          //    Math.round(Math.random()*255),
@@ -791,7 +793,12 @@ function getRandFloat(min, max){
 	return Math.random()*(max -min)+min;
 }
 
+var color = d3.scaleLinear([0, 1])
+    .range(["purple", "orange"])
+    .interpolate(d3.interpolateCubehelixLong);
+
 function styleNewNode(node){
+
 	node
         // .attr('r', function(d){
         //     d.radius = powerScale(d._child_count) + NODE_RADIUS;
@@ -804,7 +811,7 @@ function styleNewNode(node){
         //     Math.round(Math.random()*255),
         //     Math.round(Math.random()*255))
         // )
-		.style('fill', d3.interpolateBlues(getRandFloat(0.5, 1)))
+		.style('fill', d3.rgb(color(TOTAL_NODES % 500 / 500)))
         .transition().duration(5000)
     // .style('stroke', '#a9e6f8')
     //     .style('fill', d3.rgb(
