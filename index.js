@@ -74,6 +74,7 @@ var shellOptions = {
 //function called when user connects to server
 io.on('connect', function(socket){
   console.log('socket: user connected to socket.io');
+
 // <<<<<<< Updated upstream
 // =======
 //   socket.on('reap urls', function(start_node){
@@ -101,27 +102,28 @@ io.on('connect', function(socket){
     shellOptions.args = [
         start_node.url, start_node.max_levels, start_node.keyword, start_node.crawl_type
     ];
-    shellOptions.detached = true;
+    //use when child has its own child process
+    // shellOptions.detached = true;
 
     //create python shell for python bfs scraper
     // shell = new pythonShell('bfs_wrapper.py', shellOptions);
-    shell = new pythonShell('bfs.py', shellOptions);
+    shell = new pythonShell('scraper_multithreaded.py', shellOptions);
 
       //function called when node is received from scraper
     //uploads node to client
-    var i = 0;
+    // var i = 0;
     shell.on('message', function(message){
       //kill scraper when keyword is found
-      if (i++ > 2000){
-          process.kill(-shell.childProcess.pid);
-          shell = null;
-          // shell.childProcess.kill('SIGTERM');
-      }
+      // if (i++ > 2000){
+      //     process.kill(-shell.childProcess.pid);
+      //     shell = null;
+      //     // shell.childProcess.kill('SIGTERM');
+      // }
       if (message.keyword){
-          shell = null;
+          // shell = null;
           //http://azimi.me/2014/12/31/kill-child_process-node-js.html
-          process.kill(-shell.childProcess.pid);
-          // shell.childProcess.kill('SIGTERM');
+          // process.kill(-shell.childProcess.pid);
+          shell.childProcess.kill('SIGTERM');
       }
       // console.log(message);
       //send node to client
@@ -148,8 +150,8 @@ io.on('connect', function(socket){
   socket.on('disconnect', function(){
     //kills scraper on disconnect
     if (shell){
-        process.kill(-shell.childProcess.pid);
-        // shell.childProcess.kill('SIGTERM');
+        // process.kill(-shell.childProcess.pid);
+        shell.childProcess.kill('SIGTERM');
     }
   	console.log('user disconnected');
   });

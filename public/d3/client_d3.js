@@ -72,7 +72,8 @@ var tip = d3.tip()
         //     .style('stroke-width', 2)
         //     .style('stroke', '266ca9')
         //     .style('r', NODE_RADIUS*1.5);
-        html = "<strong>URL:</strong> <span style='color:red'>" + d.url + "</span>" + "<br>" +
+        html = "<strong>Title:</strong> <span style='color:red'>" + d.title + "</span>" + "<br>" +
+            "<strong>URL:</strong> <span style='color:red'>" + d.url + "</span>" + "<br>" +
 			"<strong>Hidden Count:</strong> <span style='color:red'>" + d._child_count + "</span>"+ "<br>" +
 			"<strong>Timestamp:</strong> <span style='color:red'>" + d.timestamp + "</span>"+ "<br>" +
 			"<strong>Total Count:</strong> <span style='color:red'>" + d.child_count + "</span>" + "<br>" +
@@ -185,7 +186,8 @@ function addToTree(node){
 		'keyword': node.keyword,
 		'radius': NODE_RADIUS,
 		'new_supernode': false,
-		'mouseover': false
+		'mouseover': false,
+		'title': node.title
     };
 
     //fix position and root of first node
@@ -794,8 +796,9 @@ function getRandFloat(min, max){
 }
 
 var color = d3.scaleLinear([0, 1])
-    .range(["purple", "orange"])
-    .interpolate(d3.interpolateCubehelixLong);
+	.domain([0, 0.08, 0.41, 0.58, 0.75, 0.91, 1])
+    .range(["red", "purple", "blue", "green", "yellow", "orange", "red"])
+    .interpolate(d3.interpolateCubehelix);
 
 function styleNewNode(node){
 
