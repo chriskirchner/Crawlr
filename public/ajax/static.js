@@ -16,45 +16,6 @@ function AJAX(method, link, data, callback){
 } 
 
 
-
-
-// function getForm(){
-
-//     var data = {};
-//     data.action = 'insert';
-
-//     data.formInfo = {};
-//     data.formInfo.url = document.getElementsByName('url')[0].value;
-//     data.formInfo.search = document.getElementsByName('search_term')[0].value;
-//     data.formInfo.levels = document.getElementsByName('levels')[0].value;
-//     var cType = document.getElementsByName('crawl_type');
-
-//     data.formInfo.crawl_type = cType[0].options[cType[0].selectedIndex].value;
-//     /*obtains the form information */
-
-
-//     /*If form information is complete, AJAX function is called */
-//     if (data.formInfo.info !== '' &&
-//         data.formInfo.search !== '' &&
-//         data.formInfo.levels !== ''){
-//         data = JSON.stringify(data);
-
-//         AJAX('POST', '/', data, function(response){
-            
-//             resetForm();
-//             // makeTable(response);
-
-            
-//         });
-//     }
-//     else
-//     {
-//         alert("Invalid Input!");
-//         /*displays alert if form is not complete*/
-//     }
-// }
-
-
 function getHistory() {
 
     history2 = $("#url_history2 option:selected").text();
@@ -69,6 +30,7 @@ function getHistory() {
         searchTermHist = historyList[1].split("Search Term: ")[1];
         levelsHist = historyList[2].split("Levels: ")[1];
         crawlTypeHist = historyList[3].split("Crawl Type: ")[1];
+        visualTypeHist = historyList[4].split("Visualization: ")[1];
 
         if (crawlTypeHist == "Depth-First")
         {
@@ -80,10 +42,21 @@ function getHistory() {
             crawlTypeHist = '1';
         }
 
+        if (visualTypeHist == "Graph")
+        {
+            visualTypeHist = '0';
+        }
+
+        else if (visualTypeHist == "Circle Packing")
+        {
+            visualTypeHist = '1';
+        }
+
         document.getElementsByName('url')[0].value = urlHist;
         document.getElementsByName('search_term')[0].value = searchTermHist;
         document.getElementsByName('levels')[0].value = levelsHist;
         document.getElementsByName('crawl_type')[0].value = crawlTypeHist;
+        document.getElementsByName('visual_type')[0].value = visualTypeHist;
 
     }
 
@@ -102,6 +75,7 @@ function resetForm(){
     document.getElementsByName('search_term')[0].value = '';
     document.getElementsByName('levels')[0].value = '';
     document.getElementsByName('crawl_type')[0].value = '0';
+    document.getElementsByName('visual_type')[0].value = '0';
 }
 
 
@@ -118,24 +92,83 @@ function resetHistory(){
 
 
 
-// /*Inserts a new exercise to the table when form is submitted*/
-// document.getElementById('crawlSubmit').addEventListener('click', function(e){
-//     e.preventDefault();
-//     getForm();
-// });
+var resetBtn = document.getElementById('resetSubmit');
 
-/*Inserts a new exercise to the table when form is submitted*/
-document.getElementById('resetSubmit').addEventListener('click', function(e){
-    e.preventDefault();
-    $("#user_history").remove();
-    resetHistory();
-    resetForm();
+if (resetBtn)
+{
+    resetBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        $("#user_history").remove();
+        resetHistory();
+        resetForm();
     
+    });
+}
+
+var usrHist = document.getElementById('user_history');
+
+if (usrHist)
+{
+    usrHist.addEventListener('change', function(e){
+        e.preventDefault();
+        getHistory();
 });
+}
 
 
-/*Inserts a new exercise to the table when form is submitted*/
-document.getElementById('user_history').addEventListener('change', function(e){
-    e.preventDefault();
-    getHistory();
-});
+var urlText = document.getElementById('url');
+var levelText = document.getElementById('levels');
+
+if (urlText)
+{
+    url.addEventListener('input', function(e){
+        
+        regexString1 = /http:\/\//;
+        regexString2 = /https:\/\//;
+
+        if (regexString1.test(urlText.value) || regexString2.test(urlText.value))
+        {
+            // $("#crawlSubmit").removeAttr("disabled");
+            flag1 = true;
+
+            if (flag1 && flag2)
+            {
+                $("#crawlSubmit").removeAttr("disabled");
+            }
+        }
+        else
+            $("#crawlSubmit").attr("disabled", "disabled");
+
+
+
+    });
+}
+
+
+if (levels)
+{
+    levels.addEventListener('input', function(e){
+        
+       
+
+        if (levels.value !== '' && parseInt(levels.value) > 0)
+        {
+            // $("#crawlSubmit").removeAttr("disabled");
+            flag2 = true;
+
+            if (flag1 && flag2)
+            {
+                $("#crawlSubmit").removeAttr("disabled");
+            }
+        }
+        else
+            $("#crawlSubmit").attr("disabled", "disabled");
+
+
+
+    });
+}
+
+
+flag1 = false;
+flag2 = false;

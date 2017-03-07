@@ -81,14 +81,30 @@ var tip = d3.tip()
         return html;
     });
 
+
+var tip2 = d3.tip()
+
+    //set class
+    .attr('class', 'd3-tip2')
+    //set offset from cursor
+    .offset([50, 0])
+    //add html to design tooltip
+    .html(function(d){
+        html = "<strong>URL:</strong> <span style='color:red'>" + d.data.url + "</span>" + "<br>" +
+                "<strong>Count:</strong> <span style='color:red'>" + d.data.timestamp + "</span>";
+        return html;
+    });
+
+
 /**
  * setupGFX
  * sets up the d3 graphics layout of elements
  */
 
-function setupGFX(){
+function setupGFX_Graph(){
 
     //setup viewport with width and height
+
     svg = d3.select('section')
         .append('svg')
         .attr('width', width)
@@ -131,6 +147,7 @@ function setupGFX(){
         });
 }
 
+<<<<<<< HEAD
 // var transform = d3.zoomIdentity.translate(width/2, height/2).scale(d3.event.transform.k);
 
 function zoomer(){
@@ -140,6 +157,30 @@ function zoomer(){
 	);
 }
 
+=======
+
+function setupGFX_Pack(){
+
+    
+    svg = d3.select("section")
+    .append("svg")
+    .attr('width', width)
+    .attr('height', height)
+    .call(tip2),
+    margin = 20,
+    diameter = +svg.attr("width"),
+    g = svg.append("g").attr("transform", "translate(" + diameter / 2 + "," + diameter / 2 + ")");
+
+    color = d3.scaleLinear()
+    .domain([-1, 5])
+    .range(["hsl(152,80%,80%)", "hsl(228,30%,40%)"])
+    .interpolate(d3.interpolateHcl);
+
+    pack = d3.pack()
+    .size([diameter - margin, diameter - margin])
+    .padding(2);
+}
+>>>>>>> cv3
 /**
  * clearGFX
  * resets the graphical data (e.g. when user refreshes or clicks crawl again)
@@ -164,6 +205,17 @@ var first = 0;
  * @returns {*} - gives back root of tree for readability
  */
 
+   
+
+    if (node.level === 0)
+        sizeFactor = 10000000;
+    else
+        sizeFactor = 1000000 / node.level;
+
+    sizeValue = (Math.floor(Math.random() * (sizeFactor * (5 - 1) + 1)) + (sizeFactor * 1)).toString();
+
+
+
 
 function addToTree(node){
 
@@ -187,7 +239,8 @@ function addToTree(node){
 		'radius': NODE_RADIUS,
 		'new_supernode': false,
 		'mouseover': false,
-		'title': node.title
+		'title': node.title,
+        "size" : sizeValue
     };
 
     //fix position and root of first node
@@ -331,18 +384,30 @@ function getLinks(root){
  * @param node - new node from scraper
  */
 function addToGFX(node){
-	TOTAL_NODES++;
-	//add new node to tree ADT
-    addToTree(node);
-    //update the graphics with new node
-    updateGFX(root);
+    TOTAL_NODES++;
 
-    //restyle the graphics with new node
-    restyleGFX(root);
-	//style new node;
-	styleNewNode(d3.select('[href="'+node.url+'"]'));
-    //restart the force layout with new node
-    simulation.alpha(0.7).velocityDecay(0.4).restart();
+    if (node.visual_type == '0')
+    {
+        //add new node to tree ADT
+        root = addToTree(root, node);
+        //update the graphics with new node
+        updateGFX_Graph(root);
+        //restyle the graphics with new node
+        restyleGFX(root);
+        //style new node;
+        styleNewNode(d3.select('[href="'+node.url+'"]'));
+        //restart the force layout with new node
+        simulation.alpha(0.7).velocityDecay(0.4).restart();
+    }
+
+    else if (node.visual_type == '1')
+    {
+        //add new node to tree ADT
+        root = addToTree(root, node);
+        //update the graphics with new node
+        updateGFX_Pack(root);
+        
+    }
 }
 
 /**
@@ -367,7 +432,6 @@ function trimTree(nodes) {
             if (parent._children.length == 0) {
 			    parent.new_supernode = true;
 			}
-
 
 			parent._children.push(node);
 			parent._child_count += node.child_count;
@@ -406,14 +470,14 @@ function getTrimTime(nodes){
 function getTimes(nodes){
 	return nodes.map(function(node){
 		return node.timestamp;
-	})
+	});
 }
 
 /**
  * updateGFX: updates the d3 force simulation graphics
  * @param root - root of tree ADT
  */
-function updateGFX(root){
+function updateGFX_Graph(root){
 	//get list of nodes in tree
     var nodes = getNodes(root);
     //determine if tree needs to be trimmed to sustain graphic performance
@@ -533,16 +597,70 @@ function expandChildren(parent){
 
 }
 
-// function getAllNodes(start){
-// 	var nodez = [];
-// 	function recurse(node){
-// 		if (node.children) node.children.forEach(recurse);
-// 		if (node._children) node._children.forEach(recurse);
-// 		nodez.push(node);
-// 	}
-// 	recurse(start);
-// 	return nodez;
-// }
+function updateGFX_Pack(root)
+{
+    svg.remove();
+    setupGFX_Pack();
+    root = d3.hierarchy(root)
+      .sum(function(d) { return d.size; })
+      .sort(function(a, b) { return b.value - a.value; });
+
+  var focus = root,
+      nodes = pack(root).descendants(),
+      view;
+
+      console.log(root);
+
+  circle = g.selectAll("circle")
+    .data(nodes)
+    .enter().append("circle")
+      .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
+      .style("fill", function(d) { return d.children ? color(d.depth) : null; })
+      .on('dblclick', function(d){
+            window.open(d.data.url);
+        })
+        //show tooltip on hover
+        .on("mouseover", tip2.show)
+        .on("mouseout", tip2.hide)
+      .on("click", function(d) { if (focus !== d) zoom(d), d3.event.stopPropagation(); });
+
+
+  node = g.selectAll("circle");
+  g.selectAll("circle").filter(function (d){ return d.data.keyword;})
+    .style("fill", "grey");
+
+  svg
+      .style("background", color(-1))
+      .on("click", function() { zoom(root); });
+
+  zoomTo([root.x, root.y, root.r * 2 + margin]);
+}
+
+function zoomTo(v) 
+{
+    var k = diameter / v[2]; view = v;
+    node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
+    circle.attr("r", function(d) { return d.r * k; });
+}
+
+
+function zoom(d)
+{
+    var focus0 = focus; focus = d;
+
+    var transition = d3.transition()
+        .duration(d3.event.altKey ? 7500 : 750)
+        .tween("zoom", function(d) {
+          var i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2 + margin]);
+          return function(t) { zoomTo(i(t)); };
+        });
+
+    transition.selectAll("text")
+      .filter(function(d) { return d.parent === focus || this.style.display === "inline"; })
+        .style("fill-opacity", function(d) { return d.parent === focus ? 1 : 0; })
+        .on("start", function(d) { if (d.parent === focus) this.style.display = "inline"; })
+        .on("end", function(d) { if (d.parent !== focus) this.style.display = "none"; });
+}
 
 /**
  * click: function called on clicking node
@@ -611,7 +729,7 @@ function click(d){
     d.timestamp = NUM++;
 
     //update and restyle simulation
-    updateGFX(root);
+    updateGFX_Graph(root);
     restyleGFX(root);
     styleClickedNode(d3.select('[href="'+d.url+'"]'));
     simulation.alpha(0.5).velocityDecay(0.9).restart();
@@ -671,6 +789,8 @@ function restyleGFX(root) {
     }
     recurse(root);
 }
+
+
 
 /**
  * styleKeywordNode: styles keyword node
@@ -956,7 +1076,7 @@ var buffer = [];
  * @param node - node to be buffered
  */
 function bufferNode(node){
-	buffer.push(node)
+	buffer.push(node);
 }
 
 /**
@@ -990,7 +1110,7 @@ $(document).ready(function(){
 		}
 
 		//setup d3 graphics layout
-		setupGFX();
+		
 		console.log('socketio: connecting to server');
 
 		//stops scrapping if user clicks refresh
@@ -1010,6 +1130,7 @@ $(document).ready(function(){
 		user_input.keyword = $('#search_term').val();
 		user_input.max_levels = $('#levels').val();
 		user_input.crawl_type = $('#crawl_type').val();
+        user_input.visual_type = $('#visual_type').val();
 		user_input.level = 0;
 		user_input.parent = null;
 
@@ -1018,7 +1139,17 @@ $(document).ready(function(){
 
 		//upload node from server and add to buffer
 		socket.on('node send', function(node){
-			bufferNode(node)
+            if (node.parent === null && node.visual_type == '0')
+            {
+                setupGFX_Graph();
+            }
+            else if (node.parent === null && node.visual_type == '1')
+            {
+                setupGFX_Pack();
+            }
+
+			bufferNode(node);
+
         });
 
 		//function called on server disconnect

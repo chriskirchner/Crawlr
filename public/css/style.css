@@ -100,3 +100,23 @@ svg {
 .dropdown-menu li a span {
 	float: right;
 }
+
+.node {
+  cursor: pointer;
+  fill: rgb(163, 245, 207);
+}
+
+.node:hover {
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.node--leaf {
+  fill: white;
+}
+
+.label {
+  font: 11px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  text-anchor: middle;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+}

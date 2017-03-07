@@ -47,7 +47,19 @@ app.get('/',function(req,res){
     else if(context.url_history[c].crawl_type == '1') {
       context.url_history[c].crawl_type = "Breadth-First";
     }
+
+    if (context.url_history[c].visual_type == '0') {
+      context.url_history[c].visual_type = "Graph";
+    }
+
+    else if(context.url_history[c].visual_type == '1') {
+      context.url_history[c].visual_type = "Circle Packing";
+    }
+
+
   }
+
+
   
   res.render('home', context);
 
@@ -58,8 +70,7 @@ app.post('/', function(req, res, next){
 
   if (req.body.action === 'reset'){
     session.url_history = [];
-
-  }
+	}
 });
 
 //setup python shell options for child_process
@@ -125,7 +136,10 @@ io.on('connect', function(socket){
           // process.kill(-shell.childProcess.pid);
           shell.childProcess.kill('SIGTERM');
       }
-      // console.log(message);
+
+      message.crawl_type = start_node.crawl_type;
+      message.visual_type = start_node.visual_type;
+      console.log(message);
       //send node to client
       console.log(message);
       socket.emit('node send', message);
