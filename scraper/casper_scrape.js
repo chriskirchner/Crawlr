@@ -6,17 +6,18 @@
 // Ignore comments which are not descriptions, they were used to
 // test or debug problems.
 var casper = require('casper').create({
-		clientScripts:  [
+	//	clientScripts:  [
 		//Path is relative to file location
-        '../../jquery/dist/jquery.js' 
+        //'../../jquery/dist/jquery.js' 
 
         // These scripts will be injected in remote
         // DOM on every request
-   	 ],
+   	// ],
    	 verbose: true,
    	 viewportSize:  {width:1200, height:1600}
-	});
-//casper.userAgent("Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/34.0.1847.131 Safari/537.36");
+});
+
+var system = require("system");
 
 var	fs = require("fs"),
 	utils = require('utils'),
@@ -25,18 +26,19 @@ var	fs = require("fs"),
 	type_DFS = true,
 	type_BFS = false,
 	array = [],
-	startURL = 'http://www.sciencekids.co.nz/sciencefacts/animals/cat.html', 
+	startURL = 'https://www.google.com',//'https://www.google.com', 
 	titles,
 	nextLinks = [],
-	searchType = type_BFS,		// DFS is true - BFS is false
+	searchType = type_DFS,		// DFS is true - BFS is false
 	additionalScrapeValue, 		// This is what the user requested for the layers in BFS/DFS
 	keywordSearch = true,		// False if no keyword was entered
 	keywordFound = false,
 	keyword = "jackal",
 	timeStart = performance.now();
 
-// remove later
-additionalScrapeValue = 1;
+// additionalScrapeValue should not be more than 1 for BFS or the time 
+// to scrape rises exponentially
+additionalScrapeValue = 15;
 
 // Used for Scrape choice 2
 function getLinks() {
@@ -47,59 +49,26 @@ function getLinks() {
         return e.getAttribute('href');
     });
 }
-
+/*
 casper.on('http.status.404', function(resource) {
-    console.log('Hey, this one is 404: ' + resource.url, 'ERROR');
+    //console.log('Hey, this one is 404: ' + resource.url, 'ERROR');
 });
-
-function getLinkTitles() {
-/* Scrape the links from the website (all 'anchor')
-    var x = document.querySelectorAll('a');
-    return Array.prototype.map.call(x, function(e) {
-        var $variable = $(x).html(); 
-        console.log($variable);
-    });
 */
-	 //require('utils').dump(getElementsInfo('a'));
 
-	
-	/*
- $("a").each(function(){
-    	var textShow = $(this).text();
-    	//var htmlShow = $(this).html();
-    	titles.push(textShow);
-    	//html.push(htmlShow);
-	});
-	*/
-}
 
 function findKeyword(word){
-	//a = document.documentElement.innerHTML.indexOf(word)
-	//b = document.documentElement.innerText.indexOf(word)
-	//var body = document.body;
-	//a = body.text;
-	//b = a.search(word);
-	//console.log(word);
-	//a = document.body.innerHTML.toString().indexOf(word);
-	//b = document.body.innerText.toString().indexOf(word);
-	//c = document.body.text.indexOf(word);
-	
-	//$.expr[':'].icontains = function(obj, index, meta, stack){ return (obj.textContent || obj.innerText || jQuery(obj).text() || '').toLowerCase().indexOf(meta[3].toLowerCase()) >= 0; }; 
-	//var a = $('*:contains("jackal")');
-	//console.log(a);
-	//var kw = new RegExp(word, "gi");
-	//var find = document.body.textContent.match(kw);
+	// check if keyword is in body
 	var find = casper.fetchText('body').match(word);
 		//console.log(a);
-	console.log(" keyword: "+ keyword);
+	//console.log(" keyword: "+ keyword);
 	if(find === null)
 	{
-		console.log(" no keyword match");
+		//console.log(" no keyword match");
 	}
 	else
 	{
-		console.log(" keyword found!");
-		console.log( " halting crawler.. ");
+		//console.log(" keyword found!");
+		//console.log( " halting crawler.. ");
 		keywordFound = true;
 		casper.done();
 	}
@@ -158,16 +127,17 @@ function formatString(validString){
 // arr = links
 // arr2 = titles
 // arr3 = text
-function verifyUniqueLinks(arr, arr2, arr3)
+function verifyUniqueLinks(arr, arr2, arr3, firstSearch, parent_links_array, array_index)
 {	// Uncomment to get timed function
 	// var t0 = performance.now();
 	// Loop through the array and push only unique elements to the r array
 	var n = {},
 		o = [], count = 0,
 		r = [];
-	console.log("Total Links:" + arr.length);
+	//console.log("Total Links:" + arr.length);
+	
 	for(var i = 0; i < arr.length; i++) 
-	{				//o[ arr[i] ] = false ;
+	{				
 		//filter links
 		if (!n[arr[i]] && (!arr[i].search(/^http[s]?:\/\//)) 
 			&& (arr[i] != startURL) && (arr[i] != (startURL + '/')) 
@@ -193,20 +163,30 @@ function verifyUniqueLinks(arr, arr2, arr3)
    				obj.title = arr2[i];
    			}
 
+   			//uploading json object to GFX
+   			if (firstSearch === true){
+				system.stdout.write(JSON.stringify({
+					"url": obj.url,
+					"parent_url": obj.parent_url
+				}));
+			}
+
+			if( firstSearch === false && parent_links_array.length > 0
+				&& obj.url != undefined && parent_links_array[array_index] != undefined){
+
+				system.stdout.write(JSON.stringify({
+					"url": obj.url,
+					"parent_url": parent_links_array[array_index]
+					}
+				));
+			}
    			// store all links in an array
    			nextLinks.push(arr[i]);
-   			//o[ arr[i] ] = true; 
-   			//console.log(o[arr[i]]);
+   			
 			r.push( obj ); 
 		}
 		count++;
 	}
-//	var t1 = performance.now();
-//	console.log("Function took " + (t1 - t0) + " milliseconds.");
-//  console.log(Object.keys(o).length);
-	//console.log("Count is:" + count);
-	//maps = o;
-	//console.log("Map size:" + Object.keys(maps).length);
 
 	return r;
 }
@@ -220,7 +200,7 @@ function unique_DFS_Links(arr)
 	// clear array contents
 	nextLinks = [];
 
-	console.log("Total Links:" + arr.length);
+	//console.log("Total Links:" + arr.length);
 	for(var i = 0; i < arr.length; i++) 
 	{				
 		//filter links
@@ -232,64 +212,65 @@ function unique_DFS_Links(arr)
 			// next line is important do not delete
 			n[arr[i]] = true;
 
-			/* prepare formatting for future JSON conversion
-			var obj = new Object();
-   			obj.url = arr[i];
-   			obj.parent_url = itemLink;
-   			obj.title = casper.getTitle();
-   			*/
 
    			nextLinks.push(arr[i]);
-   			//r.push( obj ); 
 		}
 
 	}
-	console.log("Filtered Links:" + nextLinks.length);
-	//return nextLinks;
+	//console.log("Filtered Links:" + nextLinks.length);
 }
+
 function BFS(integerLayersDeep){
 
 	// This function will get all the links from each page that the scraper visits
 
-	//;//.slice(0, integerLayersDeep);
-	var cntr = 1;
+	var cntr = 1,
+		arr_idx = 0,
+		out_arr_idx = 0;
 	var urls = [];
+	var parent_links = nextLinks;
 	urls = nextLinks;
 	nextLinks = [];
+	array = [];
 
-	
+	// BFS should not be more than limit 2
+	if(integerLayersDeep > 1){
+		integerLayersDeep = 1;
+	}
 
   casper.repeat(integerLayersDeep, function() {
   	//urls = nextLinks;
+  	arr_idx = 0;
   	nextLinks = [];
+  	array = [];
     this.eachThen(urls, function(response) {
 	  this.thenOpen(response.data, function(response) {
-	    console.log('Opened', this.getCurrentUrl());
-	       casper.waitForSelector("a");
-	       titles = this.evaluate(getAnchorTitle);
-           text = this.evaluate(getAnchorText);
-    	   links = this.evaluate(getAnchorHref);
-           findKeyword(keyword);
+	    //console.log('Opened', this.getCurrentUrl());
+	        casper.waitForSelector("a");
+	        titles = this.evaluate(getAnchorTitle);
+            text = this.evaluate(getAnchorText);
+    	    links = this.evaluate(getAnchorHref);
 
-           array = verifyUniqueLinks(links, titles, text);
-           //urls = nextLinks;
-           
-           console.log("Filtered Links:" + array.length);
-           fs.write("./BFS_"+cntr+".json", JSON.stringify(array, null, "\t"), 'w');
-           cntr++;
-           
+            array = verifyUniqueLinks(links, titles, text, false, parent_links, arr_idx);
+            //findKeyword(keyword);
+            //var result = JSON.stringify(array, null, "\t");
+            //system.stdout.write('\n' + array.url );
+
+        	
+		    //urls = nextLinks;
+            //system.stdout.write('\n' + parent_links[arr_idx] );
+            //console.log("Filtered Links:" + array.length);
+            // fs.write("./BFS_"+cntr+".json", JSON.stringify(array, null, "\t"), 'w');
+            cntr++;
+            arr_idx++;
 	  });
 
-	  //console.log(nextLinks);
-	  	//console.log("running...1");
 	});
 	urls = nextLinks;
-	  		//return urls;
-	//console.log(nextLinks);
-		//console.log("running...2");
+	  		
   });
 
-	console.log('In BFS');
+	//console.log('In BFS');
 }
 	
 function DFS (integerLayersDeep) {
@@ -305,13 +286,13 @@ function DFS (integerLayersDeep) {
 
 		      (function() {
 		        casper.thenOpen(item, function() {
-	              	console.log('Opening ' + this.getCurrentUrl());
+	              	//console.log('Opening ' + this.getCurrentUrl());
 	              	casper.waitForSelector("a");
 	              	//console.log(this.getTitle());
 	              	//console.log(this.getCurrentUrl());
 			      	
 		    	  	links = this.evaluate(getAnchorHref);
-		    	  	findKeyword(keyword);
+		    	  	
 		          	unique_DFS_Links(links);
 		          	var obj = new Object();
    						obj.url = this.getCurrentUrl();
@@ -320,11 +301,14 @@ function DFS (integerLayersDeep) {
 
    					array = [];
    					array.push(obj);
-
-   					   					
+   					system.stdout.write(JSON.stringify({
+						"url": obj.url,
+						"parent_url": obj.parent_url
+					}));
+   					findKeyword(keyword);				
    					original_url = this.getCurrentUrl();
 		          	item = nextLinks[Math.floor(Math.random()*nextLinks.length)];
-		           	fs.write("./DFS_"+cntr+".json", JSON.stringify(array, null, "\t"), 'w');
+		           	// fs.write("./DFS_"+cntr+".json", JSON.stringify(array, null, "\t"), 'w');
 		           	cntr++;
 		        });
 		      })(integerLayersDeep);
@@ -334,7 +318,7 @@ function DFS (integerLayersDeep) {
 		    }
 
 	});
-	console.log('In DFS');
+	//console.log('In DFS');
 }
 
 casper.start(startURL, function() {
@@ -345,18 +329,16 @@ casper.start(startURL, function() {
 		titles = this.evaluate(getAnchorTitle);
 	    text = this.evaluate(getAnchorText);
 	    links = this.evaluate(getAnchorHref);
-	    findKeyword(keyword);
 	}
 
 	// DFS
 	if( searchType === type_DFS){
-		console.log('Opened ' + startURL);
+		//console.log('Opened ' + startURL);
       	casper.waitForSelector("a");
-      	//titles = this.evaluate(getAnchorTitle);
-      	//text = this.evaluate(getAnchorText);
+      	
 	  	links = this.evaluate(getAnchorHref);
 
-	  	findKeyword(keyword);
+	  	//findKeyword(keyword);
 	}
   	
  	// Scrape method Choice 2(inconsistent by about 100 links at times)
@@ -364,19 +346,16 @@ casper.start(startURL, function() {
     //links = this.evaluate(getLinks);
     
 });
-/*
-casper.start('http://google.com/search?q=foo', function() {
-    this.echo(this.fetchText('a'));
-}).run();
-*/
+
 casper.then(function() {
    // filter links then add to array
    // BFS
 	if( searchType === type_BFS){
-		array = verifyUniqueLinks(links, titles, text);
-	  	console.log("Filtered Links:" + array.length);
+		array = verifyUniqueLinks(links, titles, text, true);
+		//findKeyword(keyword);
+	  	//console.log("Filtered Links:" + array.length);
 
-		fs.write("./BFS_0.json", JSON.stringify(array, null, "\t"), 'w');
+		// fs.write("./BFS_0.json", JSON.stringify(array, null, "\t"), 'w');
 		//fs.write("./linktest.json", JSON.stringify(titles, null, "\t"), 'w');
 	}
 
@@ -389,10 +368,18 @@ casper.then(function() {
 			obj.url = startURL;
 			obj.parent_url = "";
 			obj.title = casper.getTitle();
-		//array = [];
+
 		array.push(obj);
-	   	fs.write("./DFS_0.json", JSON.stringify(array, null, "\t"), 'w');
-	   	//console.log("first then");
+		
+		system.stdout.write(JSON.stringify({
+					"url": obj.url,
+					"parent": {
+						"url": obj.url,
+						"parent": null
+					}
+				}));
+		
+	   	// fs.write("./DFS_0.json", JSON.stringify(array, null, "\t"), 'w');
 	}
 		
 
@@ -413,133 +400,18 @@ casper.then(function() {
 		DFS(additionalScrapeValue);
 		//console.log("second then");
 	}
-	/*
-	casper.each(nextLinks, function(self, link) {
-    	self.thenOpen(link, function() {
-        	this.echo(this.getTitle());
-    	});
-	});
-	*/
+	
 });
 
 casper.run(function() {
 		
-//	var t0 = performance.now();
-//	var t1 = performance.now();
-//	console.log("Function took " + (t1 - t0) + " milliseconds.");
-	//var keys = Object.keys(maps);
-	//console.log(keys);
-/* Uncomment to view links and array size
-	for(var i in array) {
-    	console.log(array[i]);
-	}
-*/
-	console.log("in run");
+
+	//console.log("in run");
 	var timeEnd = performance.now();
-	console.log('It took ' + ((timeEnd - timeStart)/1000) + ' s');
-    casper.done();
+	//console.log('It took ' + ((timeEnd - timeStart)/1000) + ' s');
+    //casper.done();
 });
 
-
-
-
-// Keeping commented in case it is needed for future use(Delete before turning in)
-/*	
-    //this.echo(JSON.stringify(links)).exit();
-    //wait(1000);
-    
-	
-
-
-    var unique = links.filter(function(listItem, i, array){
-    	var t0 = performance.now();
-
-    	if(!links[i].search(/^http[s]?:\/\//)){
-    		return array.indexOf(listItem) === i; 
-    	}
-    	var t1 = performance.now();
-		console.log("Call to doSomething took " + (t1 - t0) + " milliseconds.");
-    });
-
-    for(var i in unique) {
-        console.log(unique[i]);
-    }
-
-	console.log(unique.length);
-*/
-/*
-function getLinks() {
-// Scrape the links from top-right nav of the website
-    var links = document.getElementsByTagName('a');
-
-    return Array.prototype.map.call(links, function (e) {
-		        
-		return e.getAttribute('href')
-    });
-}
-
-// Opens casperjs homepage
-casper.start('http://nytimes.com/', function(){
-	//array = this.evaluate(this.getElementsAttribute('a', 'title'));
-});
-
-casper.then(function () {
-    links = this.evaluate(getLinks);
-
-
-});
-
-casper.run(function () {
-/*
-    for(var i in links) {
-        console.log(links[i]);
-    }
-	console.log(links.length);
-// /	
-	for(var i in array) {
-        console.log(array[i]);
-    }
-	console.log(array.length);
-
-	var timeEnd = performance.now();
-	console.log('It took ' + ((timeEnd - timeStart)/1000) + ' s.');
-    casper.done();
-});
-
-for(i = 0; i<links.length; i++){
-				if(	(e.getAttribute('href') == links[i]) ||  (e.getAttribute('href') == "" ) )
-				{
-					
-					return;									
-				}
-
-			}
-
-function getLinks() {
-    var links = document.querySelectorAll('a');
-    return Array.prototype.map.call(links, function(e) {
-        return e.getAttribute('href');
-    });
-}
-
-	
-
-casper.start(startURL, function() {
-   // Wait for the page to be loaded
-   //this.waitForSelector('form[action="/search"]');
-});
-
-casper.then(function() {
-    // aggregate results for the 'phantomjs' search
-    links = this.evaluate(getLinks);
-});
-
-casper.run(function() {
-    // echo results in some pretty fashion
-    this.echo(links.length + ' links found:');
-    this.echo(' - ' + links.join('\n - ')).exit();
-});		
-Author: Himal Patel	
-*/
+//casper.done();
 
 

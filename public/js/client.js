@@ -4,15 +4,13 @@
 
 /* control settings */
 
-var SETTING_HTMLONLY = true;
-
 $(document).ready(function(){
 	$('#html').click(function(e){
 		e.preventDefault();
 
 		$('span#html').addClass('glyphicon glyphicon-ok');
 		$('span#js').removeClass('glyphicon glyphicon-ok');
-		SETTING_HTMLONLY = true;
+		$('.settings').attr('value', 'html');
 
 	});
 	$('#js').click(function(e){
@@ -20,7 +18,7 @@ $(document).ready(function(){
 
 		$('span#html').removeClass('glyphicon glyphicon-ok');
 		$('span#js').addClass('glyphicon glyphicon-ok');
-		SETTING_HTMLONLY = false;
+		$('.settings').attr('value', 'js');
 
 	});
 });
