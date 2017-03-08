@@ -136,12 +136,7 @@ io.on('connect', function(socket){
           // process.kill(-shell.childProcess.pid);
           shell.childProcess.kill('SIGTERM');
       }
-
-      message.crawl_type = start_node.crawl_type;
-      message.visual_type = start_node.visual_type;
-      console.log(message);
       //send node to client
-      console.log(message);
       socket.emit('node send', message);
     });
     //function called when error received from scraper

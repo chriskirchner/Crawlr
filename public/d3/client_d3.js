@@ -23,7 +23,7 @@ var width = 960,
 var nodes = [],
 	links = [];
 
-var root;
+var root = null;
 
 //setup d3 global variables
 var simulation, svg, g, linkGroup, nodeGroup;
@@ -147,7 +147,6 @@ function setupGFX_Graph(){
         });
 }
 
-<<<<<<< HEAD
 // var transform = d3.zoomIdentity.translate(width/2, height/2).scale(d3.event.transform.k);
 
 function zoomer(){
@@ -157,7 +156,6 @@ function zoomer(){
 	);
 }
 
-=======
 
 function setupGFX_Pack(){
 
@@ -180,7 +178,6 @@ function setupGFX_Pack(){
     .size([diameter - margin, diameter - margin])
     .padding(2);
 }
->>>>>>> cv3
 /**
  * clearGFX
  * resets the graphical data (e.g. when user refreshes or clicks crawl again)
@@ -205,7 +202,7 @@ var first = 0;
  * @returns {*} - gives back root of tree for readability
  */
 
-   
+function addToTree(node){
 
     if (node.level === 0)
         sizeFactor = 10000000;
@@ -213,11 +210,6 @@ var first = 0;
         sizeFactor = 1000000 / node.level;
 
     sizeValue = (Math.floor(Math.random() * (sizeFactor * (5 - 1) + 1)) + (sizeFactor * 1)).toString();
-
-
-
-
-function addToTree(node){
 
 	//convert format of node (website page) from scraper to tree for d3
 	var parent = null;
@@ -389,7 +381,7 @@ function addToGFX(node){
     if (node.visual_type == '0')
     {
         //add new node to tree ADT
-        root = addToTree(root, node);
+        addToTree(node);
         //update the graphics with new node
         updateGFX_Graph(root);
         //restyle the graphics with new node
@@ -403,7 +395,7 @@ function addToGFX(node){
     else if (node.visual_type == '1')
     {
         //add new node to tree ADT
-        root = addToTree(root, node);
+        addToTree(node);
         //update the graphics with new node
         updateGFX_Pack(root);
         
@@ -1139,17 +1131,17 @@ $(document).ready(function(){
 
 		//upload node from server and add to buffer
 		socket.on('node send', function(node){
-            if (node.parent === null && node.visual_type == '0')
+
+            if (root == null && user_input.visual_type == '0')
             {
                 setupGFX_Graph();
             }
-            else if (node.parent === null && node.visual_type == '1')
+            else if (root === null && user_input.visual_type == '1')
             {
                 setupGFX_Pack();
             }
 
 			bufferNode(node);
-
         });
 
 		//function called on server disconnect
