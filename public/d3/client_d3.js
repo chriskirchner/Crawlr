@@ -378,7 +378,7 @@ function getLinks(root){
 function addToGFX(node){
     TOTAL_NODES++;
 
-    if (node.visual_type == '0')
+    if (user_input.visual_type == '0')
     {
         //add new node to tree ADT
         addToTree(node);
@@ -392,7 +392,7 @@ function addToGFX(node){
         simulation.alpha(0.7).velocityDecay(0.4).restart();
     }
 
-    else if (node.visual_type == '1')
+    else if (user_input.visual_type == '1')
     {
         //add new node to tree ADT
         addToTree(node);
@@ -1091,6 +1091,7 @@ setInterval(function(){
 
 //using socket io to update GFX real time BABY! YEH!
 var socket = null;
+var user_input = {};
 $(document).ready(function(){
 	$('#crawl-form').on('submit', function(e){
 		//prevent the bubble
@@ -1117,12 +1118,14 @@ $(document).ready(function(){
 		});
 
 		//get user input and sent to server
-		var user_input = {};
+
 		user_input.url = $('#url').val();
 		user_input.keyword = $('#search_term').val();
 		user_input.max_levels = $('#levels').val();
 		user_input.crawl_type = $('#crawl_type').val();
         user_input.visual_type = $('#visual_type').val();
+        user_input.scraper_type = $('.settings').attr('value');
+        console.log(user_input.scraper_type);
 		user_input.level = 0;
 		user_input.parent = null;
 

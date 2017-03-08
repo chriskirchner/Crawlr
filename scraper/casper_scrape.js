@@ -260,7 +260,7 @@ function BFS(integerLayersDeep){
 		    //urls = nextLinks;
             //system.stdout.write('\n' + parent_links[arr_idx] );
             //console.log("Filtered Links:" + array.length);
-            fs.write("./BFS_"+cntr+".json", JSON.stringify(array, null, "\t"), 'w');
+            // fs.write("./BFS_"+cntr+".json", JSON.stringify(array, null, "\t"), 'w');
             cntr++;
             arr_idx++;
 	  });
@@ -308,7 +308,7 @@ function DFS (integerLayersDeep) {
    					findKeyword(keyword);				
    					original_url = this.getCurrentUrl();
 		          	item = nextLinks[Math.floor(Math.random()*nextLinks.length)];
-		           	fs.write("./DFS_"+cntr+".json", JSON.stringify(array, null, "\t"), 'w');
+		           	// fs.write("./DFS_"+cntr+".json", JSON.stringify(array, null, "\t"), 'w');
 		           	cntr++;
 		        });
 		      })(integerLayersDeep);
@@ -355,7 +355,7 @@ casper.then(function() {
 		//findKeyword(keyword);
 	  	//console.log("Filtered Links:" + array.length);
 
-		fs.write("./BFS_0.json", JSON.stringify(array, null, "\t"), 'w');
+		// fs.write("./BFS_0.json", JSON.stringify(array, null, "\t"), 'w');
 		//fs.write("./linktest.json", JSON.stringify(titles, null, "\t"), 'w');
 	}
 
@@ -379,7 +379,7 @@ casper.then(function() {
 					}
 				}));
 		
-	   	fs.write("./DFS_0.json", JSON.stringify(array, null, "\t"), 'w');
+	   	// fs.write("./DFS_0.json", JSON.stringify(array, null, "\t"), 'w');
 	}
 		
 
