@@ -81,6 +81,7 @@ app.post('/', function(req, res, next){
 
 io.on('connect', function(socket){
   console.log('socket: user connected to socket.io');
+<<<<<<< HEAD
 
 // <<<<<<< Updated upstream
 // =======
@@ -98,11 +99,13 @@ io.on('connect', function(socket){
 // >>>>>>> Stashed changes
 
   //function called when user issues a crawl from client
-
+=======
+>>>>>>> duo
   var shell = null;
   socket.on('reap urls', function(start_node){
     console.log('reaping...');
     session.url_history.push(start_node);
+<<<<<<< HEAD
 
     //arguments for child process
     shellOptions.args = [
@@ -157,31 +160,29 @@ io.on('connect', function(socket){
         // process.kill(-shell.childProcess.pid);
         shell.childProcess.kill('SIGTERM');
     }
+=======
+    var casper = spawn('casperjs', ['./scraper/casper_scrape.js']);
+    var json_string = '';
+    //http://stackoverflow.com/questions/34178952/continuously-read-json-from-childprocess-stdout
+    casper.stdout.pipe(stream);
+    stream.on('data', function(json_node){
+      console.log(json_node);
+      socket.emit('node send', json_node);
+    });
 
-// =======
-//     var casper = spawn('casperjs', ['./scraper/casper_scrape.js']);
-//     var json_string = '';
-//     //http://stackoverflow.com/questions/34178952/continuously-read-json-from-childprocess-stdout
-//     casper.stdout.pipe(stream);
-//     stream.on('data', function(json_node){
-//       console.log(json_node);
-//       socket.emit('node send', json_node);
-//     });
-//
-//       // casper.stdout.on('data', function(d){
-//       //   console.log(d.toString());
-//       // });
-//
-//     // casper.on('end', function(){
-//     //   console.log(json_string);
-//     // });
-//
-//     // scrapman(socket, start_node, 2);
-//
-//   });
-//   socket.on('disconnect', function(){
-// >>>>>>> duo
+      // casper.stdout.on('data', function(d){
+      //   console.log(d.toString());
+      // });
 
+    // casper.on('end', function(){
+    //   console.log(json_string);
+    // });
+
+    // scrapman(socket, start_node, 2);
+
+  });
+  socket.on('disconnect', function(){
+>>>>>>> duo
   	console.log('user disconnected');
   });
   // process.on('SIGINT', function() {
