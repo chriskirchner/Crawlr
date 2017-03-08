@@ -5,6 +5,7 @@ sudo apt-get install npm -y
 sudo apt-get install python3.5 -y
 sudo apt-get install python3-pip -y
 sudo apt-get install nodejs-legacy
+sudo apt-get install phantomjs
 pip3 install virtualenv
 npm install
 mkdir venv
@@ -12,3 +13,4 @@ virtualenv -p python3.5 venv
 . ./venv/bin/activate
 pip install -r pip.txt
 sudo npm install forever -g
+sudo npm install -g casperjs
