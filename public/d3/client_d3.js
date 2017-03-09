@@ -1124,7 +1124,7 @@ $(document).ready(function(){
 		user_input.max_levels = $('#levels').val();
 		user_input.crawl_type = $('#crawl_type').val();
         user_input.visual_type = $('#visual_type').val();
-        user_input.scraper_type = $('.settings').attr('value');
+        user_input.scraper_type = $('#settings').val();
         console.log(user_input.scraper_type);
 		user_input.level = 0;
 		user_input.parent = null;

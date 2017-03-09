@@ -1,90 +1,56 @@
-<<<<<<< HEAD
-    <section class="bg-primary" id="about">
-        <div class="container">
-            <div class="row" >
-            {{!-- spacing for now --}}
-            <br> 
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
-            <br>
 
-                <div class="col-lg-8 col-lg-offset-2 text-center" >
-                    <h1 class="section-heading">Crawlr</h1>
-                    <h4>Crawlr is a web crawler that generates interactive graphical visualizations based upon a starting URL using graph traversal algorithms.<h4>
-                    <hr class="light">
-                    {{!-- <p class="text-faded">WEB2: GRAPHICAL CRAWLER: Write a web page that crawls the web, following links from place to place, building a graphical model of places traveled</p> --}}
-
-                    <form>
-                    <fieldset>
-
-                    <div class="form-inline col-lg-4">
-                        <label class="radio-inline"><input type="radio" name="optradio">Option 1</label>
-                        <label class="radio-inline"><input type="radio" name="optradio">Option 2</label>
-                    </div>
+ 
 
 
 
-                    <div class="col-lg-4">
-                        <div class="input-group">
-                        <input type="text" class="form-control" placeholder="# Levels">
-                        </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search term">
-                        </div>
-                    </div>
-                    <div class="col-lg-5">
-                        <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Enter URL...">
-                        <span class="input-group-btn">
-                        <button class="btn btn-default" type="button">Go!</button>
-                        </span>
-                        </div><!-- /input-group -->
-                    </div><!-- /.col-lg-6 -->
-                    </fieldset>
-                    </form>
-                </div>
-            </div>
-=======
 <nav class="navbar navbar-inverse">
     <div class="container-fluid">
-        <div class="navbar-header">
+        <div class="navbar-header ">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
                 <span class="sr-only">Toggle navigation</span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#">Crawlr</a>
+            <a class="navbar-brand" href="/">Crawlr</a>
         </div>
+        <form class="navbar-form navbar-left row" action ="/" id="crawl-form" method="post">
+        <div class="form-group">
+    					
+                        <input type="text" class="form-control shift-left" name="url" id="url" placeholder="URL" autocompete="on">
+                        <input type="text" class="form-control md-input" name="search_term" id="search_term" placeholder="Search Term" >
+                        <input type="number" class="form-control sm-input" name="levels" id="levels" placeholder="Levels" min="1" >
+                        <select name="crawl_type" class="selectpicker md-input show-tick" id="crawl_type" >
+                          <option value="0" data-icon="glyphicon glyphicon-resize-small">Depth-First</option>
+                          <option value="1" data-icon="glyphicon glyphicon-resize-full">Breadth-First</option>
+                        </select>
+                        
+                        <select name="visual_type" class="selectpicker md-input show-tick" id="visual_type">
+                          <option value="0" data-icon="glyphicon glyphicon-grain">Graph</option>
+                          <option value="1" data-icon="glyphicon glyphicon-record">Circle Packing</option>
+                        </select>
+            {{!--             <div class="btn-group">
+    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+        Select icon <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu list-inline" role="menu">
+        <li><a class="btn" id="bfs" href="#"><span class="glyphicon glyphicon-cutlery"></span></a></li>
+        <li><span class="glyphicon glyphicon-fire"></span></li>
+                
+    </ul>
+</div> --}}
+
+                </div>
+
+  			<input type="submit" class="btn btn-default" name="crawlSubmit" id="crawlSubmit" value="Crawl"  title= "URL must have 'http://' or 'https://'">
+
+</form>
+
         <div class="navbar-collapse collapse navbar-right">
-            <ul class="nav navbar-nav">
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle settings" value="html" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                        <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="btn" id="html" href="#">
-                                HTML ONLY
-                                <span class="glyphicon glyphicon-ok" id="html" aria-hidden="true"></span>
-                        </li></a>
-                        <li><a class="btn" id="js" href="#">
-                                ENABLE JS
-                                <span id="js" aria-hidden="true"></span>
-                        </li></a>
-                    </ul>
-                    <!--<button type="button" class="btn btn-glyph-custom" aria-label="Right Align">-->
-                    <!--</button>-->
-                </li>
-            </ul>
+            <select name="visual_type" class="selectpicker md-input show-tick" id="settings">
+                          <option data-icon="glyphicon glyphicon-grain" value="html">html</option>
+                          <option data-icon="glyphicon glyphicon-record" value="js">Circle Packing</option>
+                        </select>
     </div>
 </nav>
 
@@ -93,26 +59,24 @@
         <div class="row" >
             <div class="col-lg-10 col-lg-offset-1 text-center" >
                 <h1 class="section-heading">Crawlr</h1>
-                <h4>Crawlr is a web crawler that generates interactive graphical visualizations based upon a starting URL using graph traversal algorithms.<h4>
+                <h4>Crawlr is a web crawler that generates interactive graphical visualizations based upon a starting URL and graph traversal algorithms.</h4>
 
 
 
 
-                <form action ="/" id="crawl-form" class="form-inline" method="post">
-
+                {{!-- <form action ="/" id="crawl-form" class="form-inline" method="post">
                 <hr class="light">
-
                     <div class="form-group">
                       <p>
                         <label for="url">URL</label>
-                        <input type="text" class="form-control" name="url" id="url" value="http://www.sciencekids.co.nz/sciencefacts/animals/cat.html" autocompete="on">
+                        <input type="text" class="form-control" name="url" id="url" placeholder="http://www.sciencekids.co.nz/sciencefacts/animals/cat.html" autocompete="on">
                         &nbsp;&nbsp;&nbsp;
                         <label for="search_term">Search Term</label>
                         <input type="text" class="form-control" name="search_term" id="search_term" value="">
                       </p>
                       <p>
                         <label for="levels">Levels</label>
-                        <input type="number" class="form-control" name="levels" id="levels" value="2" min="1">
+                        <input type="number" class="form-control" name="levels" id="levels" placeholder="2" min="1">
                        &nbsp;&nbsp;&nbsp;
                         <label for="crawl_type">Crawl Type</label>
                         <select name="crawl_type" id="crawl_type">
@@ -128,18 +92,17 @@
                     </div>
                     </p>
                     <p>
-                      <!--<input type="submit" class="btn btn-primary" name="crawlSubmit" id="crawlSubmit" value="Crawl" disabled="disabled" title= "URL must have 'http://' or 'https://'">-->
-                        <input type="submit" class="btn btn-primary" name="crawlSubmit" id="crawlSubmit" value="Crawl" title= "URL must have 'http://' or 'https://'">
-
+                      <input type="submit" class="btn btn-primary" name="crawlSubmit" id="crawlSubmit" value="Crawl" disabled="disabled" title= "URL must have 'http://' or 'https://'">
                     </p>
-
                 </form>
-                <br>
+                <br> --}}
 
         {{#if url_history}}
-        <div id="user_history">
-        <form action ="/" id="reset-form" class="form-inline" method="post">
+        <div id="user_history" >
+        <form action ="/" id="reset-form" class="form-inline margin-top" method="post">
+        
             <label for="url_history">Search History</label>
+
                 <select name="url_history" id="url_history2">
                 <option selected="selected"></option>
                 {{#each url_history}}
@@ -149,7 +112,6 @@
              <input type="submit" class="btn btn-primary btn-xs" name="resetSubmit" id="resetSubmit" value="Clear History">
                 
         </form>
->>>>>>> 5016b690cade9244f361d0aefd9b500cf8237267
         </div>
         {{/if}}
             </div>
