@@ -1,2 +1,5 @@
 **/node_modules
 **/credentials.js
+**/venv
+**/env
+**/.idea

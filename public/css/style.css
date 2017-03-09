@@ -2,12 +2,18 @@
 
 html, body {
 	height: 100%;
-	background-color: #333;
+	padding-top: 5px;
+	/*background-color: #333;*/
+	background-image: url('/images/dark_background.jpg');
 }
 
 section {
 	height: 100%;
-	background-color: #333;
+	/*background-color: #333;*/
+}
+
+select {
+	color: black;
 }
 
 
@@ -22,5 +28,95 @@ section {
 }
 
 .bg-primary {
-	background-color: #333;
+	/*background-color: #333;*/
+	background-image: url('/images/dark_background.jpg');
+}
+
+svg {
+	display: block;
+	margin: 0 auto;
+}
+
+
+/*http://bl.ocks.org/Caged/6476579*/
+
+.d3-tip {
+	line-height: 1;
+	font-weight: bold;
+	padding: 12px;
+	background: rgba(0, 0, 0, 0.8);
+	color: #fff;
+	border-radius: 2px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after {
+	box-sizing: border-box;
+	display: inline;
+	font-size: 10px;
+	width: 100%;
+	line-height: 1;
+	color: rgba(0, 0, 0, 0.8);
+	content: "\25BC";
+	position: absolute;
+	text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after {
+	margin: -1px 0 0 0;
+	top: 100%;
+	left: 0;
+}
+
+.line {
+	shape-rendering: crispEdges;
+}
+
+.navbar {
+	background: transparent;
+	border: 0px;
+}
+
+.glyphicon-cog {
+	font-size: 2em;
+}
+
+.btn.btn-glyph-custom {
+	background-color: rgba(0,0,0,0.5);
+	color: white;
+	border-color: black;
+}
+
+.dropdown-menu {
+	background-color: rgba(0,0,0,0.5);
+}
+
+.dropdown-menu li a {
+	color: white;
+	text-align: left;
+}
+
+.dropdown-menu li a span {
+	float: right;
+}
+
+.node {
+  cursor: pointer;
+  fill: rgb(163, 245, 207);
+}
+
+.node:hover {
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.node--leaf {
+  fill: white;
+}
+
+.label {
+  font: 11px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  text-anchor: middle;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
 }
