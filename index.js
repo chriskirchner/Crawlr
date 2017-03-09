@@ -129,7 +129,7 @@ function scrapeHtml(start_node, socket){
     //setup python shell options for child_process
     var shellOptions = {
         mode: 'json',
-        pythonPath: './env/Scripts/python',
+        pythonPath: './venv/bin/python3',
         pythonOptions: ['-u'],
         // scriptPath: './scrapys/scrapys/spiders'
         scriptPath: './scraper/'

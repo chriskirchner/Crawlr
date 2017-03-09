@@ -1,5 +1,33 @@
 
 
+
+.shift-left {
+	margin-left: 170px;
+
+}
+
+.btn.btn-glyph-custom {
+	background-color: rgba(0,0,0,0.5);
+	color: white;
+	border-color: black;
+}
+
+
+
+
+
+
+.sm-input {
+    max-width: 100px;
+}
+
+.md-input {
+    max-width: 150px;
+}
+
+
+
+
 html, body {
 	height: 100%;
 	padding-top: 5px;
@@ -88,6 +116,9 @@ svg {
 	border-color: black;
 }
 
+
+/* comment out for now until fix */
+/*
 .dropdown-menu {
 	background-color: rgba(0,0,0,0.5);
 }
@@ -99,7 +130,11 @@ svg {
 
 .dropdown-menu li a span {
 	float: right;
-}
+}*/
+
+
+
+
 
 .node {
   cursor: pointer;

@@ -90,8 +90,10 @@ var tip2 = d3.tip()
     .offset([50, 0])
     //add html to design tooltip
     .html(function(d){
-        html = "<strong>URL:</strong> <span style='color:red'>" + d.data.url + "</span>" + "<br>" +
-                "<strong>Count:</strong> <span style='color:red'>" + d.data.timestamp + "</span>";
+
+        html = "<strong>Title:</strong> <span style='color:red'>" + d.data.title + "</span>" + "<br>" +
+            "<strong>URL:</strong> <span style='color:red'>" + d.data.url + "</span>" + "<br>";
+                
         return html;
     });
 
@@ -1124,7 +1126,7 @@ $(document).ready(function(){
 		user_input.max_levels = $('#levels').val();
 		user_input.crawl_type = $('#crawl_type').val();
         user_input.visual_type = $('#visual_type').val();
-        user_input.scraper_type = $('#settings').val();
+        user_input.scraper_type = $('#settings').attr('value');
         console.log(user_input.scraper_type);
 		user_input.level = 0;
 		user_input.parent = null;

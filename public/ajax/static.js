@@ -119,11 +119,13 @@ if (usrHist)
 var urlText = document.getElementById('url');
 var levelText = document.getElementById('levels');
 
-if (urlText)
-{
-    url.addEventListener('input', function(e){
-        
-        regexString1 = /http:\/\//;
+window.addEventListener ('load', function () {
+    setInterval (textbox, 2);
+}, false);
+
+function textbox(){
+
+    regexString1 = /http:\/\//;
         regexString2 = /https:\/\//;
 
         if (regexString1.test(urlText.value) || regexString2.test(urlText.value))
@@ -141,16 +143,6 @@ if (urlText)
 
 
 
-    });
-}
-
-
-if (levels)
-{
-    levels.addEventListener('input', function(e){
-        
-       
-
         if (levels.value !== '' && parseInt(levels.value) > 0)
         {
             // $("#crawlSubmit").removeAttr("disabled");
@@ -166,8 +158,58 @@ if (levels)
 
 
 
-    });
+
 }
+// if (urlText)
+// {
+//     url.addEventListener('input', function(e){
+        
+//         regexString1 = /http:\/\//;
+//         regexString2 = /https:\/\//;
+
+//         if (regexString1.test(urlText.value) || regexString2.test(urlText.value))
+//         {
+//             // $("#crawlSubmit").removeAttr("disabled");
+//             flag1 = true;
+
+//             if (flag1 && flag2)
+//             {
+//                 $("#crawlSubmit").removeAttr("disabled");
+//             }
+//         }
+//         else
+//             $("#crawlSubmit").attr("disabled", "disabled");
+
+
+
+//     });
+// }
+
+
+
+// if (levels)
+// {
+//     levels.addEventListener('input', function(e){
+        
+       
+
+//         if (levels.value !== '' && parseInt(levels.value) > 0)
+//         {
+//             // $("#crawlSubmit").removeAttr("disabled");
+//             flag2 = true;
+
+//             if (flag1 && flag2)
+//             {
+//                 $("#crawlSubmit").removeAttr("disabled");
+//             }
+//         }
+//         else
+//             $("#crawlSubmit").attr("disabled", "disabled");
+
+
+
+//     });
+// }
 
 
 flag1 = false;

@@ -1,8 +1,4 @@
 
- 
-
-
-
 <nav class="navbar navbar-inverse">
     <div class="container-fluid">
         <div class="navbar-header ">
@@ -47,11 +43,31 @@
 </form>
 
         <div class="navbar-collapse collapse navbar-right">
-            <select name="visual_type" class="selectpicker md-input show-tick" id="settings">
+            {{!-- <select name="visual_type" class="selectpicker md-input show-tick" id="settings">
                           <option data-icon="glyphicon glyphicon-grain" value="html">html</option>
-                          <option data-icon="glyphicon glyphicon-record" value="js">Circle Packing</option>
-                        </select>
+                          <option data-icon="glyphicon glyphicon-record" value="js">js</option>
+                        </select> --}}
+                <ul class="nav navbar-nav">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" id="settings" value="html" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="btn" id="html" href="#">
+                                HTML ONLY
+                                <span class="glyphicon glyphicon-ok" id="html" aria-hidden="true"></span>
+                        </li></a>
+                        <li><a class="btn" id="js" href="#">
+                                ENABLE JS
+                                <span id="js" aria-hidden="true"></span>
+                        </li></a>
+                    </ul>
+                    <!--<button type="button" class="btn btn-glyph-custom" aria-label="Right Align">-->
+                    <!--</button>-->
+                </li>
+            </ul>
     </div>
+
 </nav>
 
 <section class="bg-primary" id="about">
