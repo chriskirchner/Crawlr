@@ -18,6 +18,12 @@ var casper = require('casper').create({
 });
 
 var system = require("system");
+//var index = require("../../../index.js");
+
+var s = JSON.parse(casper.cli.get("url")),
+ad = JSON.parse(casper.cli.raw.get(0)),
+k = JSON.parse(casper.cli.get("kw")),
+c = parseInt(JSON.parse(casper.cli.raw.get("cr")));
 
 var	fs = require("fs"),
 	utils = require('utils'),
@@ -26,19 +32,33 @@ var	fs = require("fs"),
 	type_DFS = true,
 	type_BFS = false,
 	array = [],
-	startURL = 'https://www.google.com',//'https://www.google.com', 
+	startURL = s,//'https://www.google.com',//s,//index.startURL(),//'https://www.google.com',//'https://www.google.com', 
 	titles,
 	nextLinks = [],
 	searchType = type_DFS,		// DFS is true - BFS is false
-	additionalScrapeValue, 		// This is what the user requested for the layers in BFS/DFS
+	additionalScrapeValue = ad-1,//dindex.additionalScrapeValue(), 		// This is what the user requested for the layers in BFS/DFS
 	keywordSearch = true,		// False if no keyword was entered
 	keywordFound = false,
-	keyword = "jackal",
+	keyword = k,//index.keyword(),//"jackal",
 	timeStart = performance.now();
 
+// if dfs or bfs value represented on website
+if ( c === 0){
+		searchType = type_DFS;		// DFS is true - BFS is false
+}
+else if ( c === 1){
+		searchType = type_BFS;		// DFS is true - BFS is false
+
+}
+//console.log(startURL);
+//console.log(additionalScrapeValue);
+//console.log(JSON.stringify(keyword));
+//console.log(JSON.stringify(typeof(keyword)));
+
+//	console.log(c);//index.crawl_type());
 // additionalScrapeValue should not be more than 1 for BFS or the time 
 // to scrape rises exponentially
-additionalScrapeValue = 15;
+//additionalScrapeValue = 15;
 
 // Used for Scrape choice 2
 function getLinks() {
@@ -59,18 +79,26 @@ casper.on('http.status.404', function(resource) {
 function findKeyword(word){
 	// check if keyword is in body
 	var find = casper.fetchText('body').match(word);
+
+	//console.log(JSON.stringify(word));
+	//	console.log(JSON.stringify(typeof(word)));
+
 		//console.log(a);
 	//console.log(" keyword: "+ keyword);
-	if(find === null)
+	if(find === null || !word)
 	{
-		//console.log(" no keyword match");
+		//console.log(JSON.stringify(" no keyword match"));
 	}
 	else
 	{
 		//console.log(" keyword found!");
 		//console.log( " halting crawler.. ");
+		//console.log(JSON.stringify(" keyword match"));
 		keywordFound = true;
-		casper.done();
+		
+		//console.log(JSON.stringify(" keyword match"));
+		//casper.exit();
+		//casper.done();
 	}
 
 }
@@ -132,7 +160,7 @@ function verifyUniqueLinks(arr, arr2, arr3, firstSearch, parent_links_array, arr
 	// var t0 = performance.now();
 	// Loop through the array and push only unique elements to the r array
 	var n = {},
-		o = [], count = 0,
+		o = [], firstNode = true,
 		r = [];
 	//console.log("Total Links:" + arr.length);
 	
@@ -164,28 +192,95 @@ function verifyUniqueLinks(arr, arr2, arr3, firstSearch, parent_links_array, arr
    			}
 
    			//uploading json object to GFX
-   			if (firstSearch === true){
-				system.stdout.write(JSON.stringify({
-					"url": obj.url,
-					"parent_url": obj.parent_url
-				}));
+   			if ( firstSearch === true && firstNode === true ){
+   				
+				if( keywordFound === false){
+					system.stdout.write(JSON.stringify({
+							"url": startURL,
+							"parent": {
+								"url": startURL,
+								"parent": null
+							}
+
+					}));
+				}
+				else
+				{
+					system.stdout.write(JSON.stringify({
+								"url": startURL,
+								"parent": {
+									"url": startURL,
+									"parent": null
+								},
+								"keyword": true
+					}));
+					break;
+				} 
+
+				firstNode = false;
+
+
+			}
+			
+			if (firstSearch === true && firstNode === false){
+				if ( keywordFound === false){
+   					system.stdout.write(JSON.stringify({
+						"url": obj.url,
+						"parent_url": obj.parent_url
+					}));
+				}
+				else
+				{
+					system.stdout.write(JSON.stringify({
+						"url": obj.url,
+						"parent_url": obj.parent_url,
+						"keyword": true
+					}));
+					break;
+				}
+				
 			}
 
 			if( firstSearch === false && parent_links_array.length > 0
 				&& obj.url != undefined && parent_links_array[array_index] != undefined){
-
-				system.stdout.write(JSON.stringify({
-					"url": obj.url,
-					"parent_url": parent_links_array[array_index]
+				//findKeyword(keyword);
+				//console.log(JSON.stringify("Reached here"));
+				//casper.exit();
+				if ( keywordFound === false){
+					system.stdout.write(JSON.stringify({
+						"url": obj.url,
+						"parent_url": parent_links_array[array_index]
+						}
+					));
+				}
+				else{
+					if(array_index > 0){
+						system.stdout.write(JSON.stringify({
+							"url": obj.parent_url,
+							"parent_url": parent_links_array[array_index-1],
+							"keyword": true
+							}
+						));
 					}
-				));
+					else if ( array_index == 0 ){
+
+						system.stdout.write(JSON.stringify({
+							"url": obj.parent_url,
+							"parent_url": startURL,
+							"keyword": true
+							}
+						));
+					}
+					break;
+				}
+
 			}
    			// store all links in an array
    			nextLinks.push(arr[i]);
    			
 			r.push( obj ); 
 		}
-		count++;
+		//count++;
 	}
 
 	return r;
@@ -251,8 +346,10 @@ function BFS(integerLayersDeep){
             text = this.evaluate(getAnchorText);
     	    links = this.evaluate(getAnchorHref);
 
-            array = verifyUniqueLinks(links, titles, text, false, parent_links, arr_idx);
-            //findKeyword(keyword);
+    	    if ( keywordFound === false){
+    	    	findKeyword(keyword);
+            	array = verifyUniqueLinks(links, titles, text, false, parent_links, arr_idx);
+        	}
             //var result = JSON.stringify(array, null, "\t");
             //system.stdout.write('\n' + array.url );
 
@@ -260,7 +357,7 @@ function BFS(integerLayersDeep){
 		    //urls = nextLinks;
             //system.stdout.write('\n' + parent_links[arr_idx] );
             //console.log("Filtered Links:" + array.length);
-            // fs.write("./BFS_"+cntr+".json", JSON.stringify(array, null, "\t"), 'w');
+            //fs.write("./BFS_"+cntr+".json", JSON.stringify(array, null, "\t"), 'w');
             cntr++;
             arr_idx++;
 	  });
@@ -277,7 +374,7 @@ function DFS (integerLayersDeep) {
 
 	var cntr = 1;
 	var original_url = startURL;
-
+//console.log(JSON.stringify(integerLayersDeep));
 	casper.then(function() {
     
 	    while (integerLayersDeep) {
@@ -292,23 +389,36 @@ function DFS (integerLayersDeep) {
 	              	//console.log(this.getCurrentUrl());
 			      	
 		    	  	links = this.evaluate(getAnchorHref);
-		    	  	
-		          	unique_DFS_Links(links);
-		          	var obj = new Object();
-   						obj.url = this.getCurrentUrl();
-   						obj.parent_url = original_url;
-   						obj.title = this.getTitle();
+		    	  	if ( keywordFound === false){
 
-   					array = [];
-   					array.push(obj);
-   					system.stdout.write(JSON.stringify({
-						"url": obj.url,
-						"parent_url": obj.parent_url
-					}));
-   					findKeyword(keyword);				
+			          	unique_DFS_Links(links);
+			          	var obj = new Object();
+	   						obj.url = this.getCurrentUrl();
+	   						obj.parent_url = original_url;
+	   						obj.title = this.getTitle();
+
+	   					array = [];
+	   					array.push(obj);
+	   					findKeyword(keyword);
+
+	   					if ( keywordFound === false){
+		   					system.stdout.write(JSON.stringify({
+								"url": obj.url,
+								"parent_url": obj.parent_url
+							}));
+	   					}
+	   					else
+	   					{
+	   						system.stdout.write(JSON.stringify({
+								"url": obj.url,
+								"parent_url": obj.parent_url,
+								"keyword": true
+							}));
+	   					}
+	   				}			
    					original_url = this.getCurrentUrl();
 		          	item = nextLinks[Math.floor(Math.random()*nextLinks.length)];
-		           	// fs.write("./DFS_"+cntr+".json", JSON.stringify(array, null, "\t"), 'w');
+		           	//fs.write("./DFS_"+cntr+".json", JSON.stringify(array, null, "\t"), 'w');
 		           	cntr++;
 		        });
 		      })(integerLayersDeep);
@@ -351,11 +461,11 @@ casper.then(function() {
    // filter links then add to array
    // BFS
 	if( searchType === type_BFS){
+		findKeyword(keyword);
 		array = verifyUniqueLinks(links, titles, text, true);
-		//findKeyword(keyword);
 	  	//console.log("Filtered Links:" + array.length);
 
-		// fs.write("./BFS_0.json", JSON.stringify(array, null, "\t"), 'w');
+		//fs.write("./BFS_0.json", JSON.stringify(array, null, "\t"), 'w');
 		//fs.write("./linktest.json", JSON.stringify(titles, null, "\t"), 'w');
 	}
 
@@ -370,16 +480,30 @@ casper.then(function() {
 			obj.title = casper.getTitle();
 
 		array.push(obj);
-		
-		system.stdout.write(JSON.stringify({
-					"url": obj.url,
-					"parent": {
+		findKeyword(keyword);
+
+		if(keywordFound === false){
+			system.stdout.write(JSON.stringify({
 						"url": obj.url,
-						"parent": null
-					}
-				}));
+						"parent": {
+							"url": obj.url,
+							"parent": null
+						}
+			}));
+		}
+		else
+		{
+			system.stdout.write(JSON.stringify({
+						"url": obj.url,
+						"parent": {
+							"url": obj.url,
+							"parent": null
+						},
+						"keyword": true
+			}));
+		}
 		
-	   	// fs.write("./DFS_0.json", JSON.stringify(array, null, "\t"), 'w');
+	   	//fs.write("./DFS_0.json", JSON.stringify(array, null, "\t"), 'w');
 	}
 		
 
@@ -397,6 +521,7 @@ casper.then(function() {
 	
 	// DFS
 	if( searchType === type_DFS){
+		findKeyword(keyword);
 		DFS(additionalScrapeValue);
 		//console.log("second then");
 	}
