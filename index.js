@@ -195,6 +195,9 @@ function scrapeJs(start_node, socket){
 
     casper = null;
 
+    //https://github.com/ariya/phantomjs/issues/14376
+    process.env.QT_QPA_PLATFORM='offscreen';
+
     var startURL = start_node.url,
         additionalScrapeValue = start_node.max_levels,
         keyword = start_node.keyword,
