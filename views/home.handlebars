@@ -19,10 +19,11 @@
                         <select name="crawl_type" class="selectpicker md-input show-tick" id="crawl_type" >
                           <option value="0" data-icon="glyphicon glyphicon-resize-small">Depth-First</option>
                           <option value="1" data-icon="glyphicon glyphicon-resize-full">Breadth-First</option>
+                          <option value="2" data-icon="glyphicon glyphicon glyphicon-fire">Single-Path DFS</option>
                         </select>
                         
                         <select name="visual_type" class="selectpicker md-input show-tick" id="visual_type">
-                          <option value="0" data-icon="glyphicon glyphicon-grain">Graph</option>
+                          <option value="0" data-icon="glyphicon glyphicon-grain">Force Layout</option>
                           <option value="1" data-icon="glyphicon glyphicon-record">Circle Packing</option>
                         </select>
             {{!--             <div class="btn-group">
@@ -60,6 +61,10 @@
                         <li><a class="btn" id="js" href="#">
                                 ENABLE JS
                                 <span id="js" aria-hidden="true"></span>
+                        </li></a>
+                        <li><a class="btn" id="scrapy" href="#">
+                            SCRAPY
+                            <span id="scrapy" aria-hidden="true"></span>
                         </li></a>
                     </ul>
                     <!--<button type="button" class="btn btn-glyph-custom" aria-label="Right Align">-->

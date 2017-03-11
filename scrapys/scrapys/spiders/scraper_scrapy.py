@@ -13,7 +13,7 @@ import json
 
 
 class BfsScraper(scrapy.Spider):
-    name = "bfs_scraper"
+    name = "scraper_scrapy"
 
     def __init__(self, **kwargs):
 
