@@ -86,7 +86,7 @@ io.on('connect', function(socket){
     console.log('reaping urls...');
     //crawl input is pushed to url history
     session.url_history.push(start_node);
-
+    console.log(start_node.scraper_type);
     if (start_node.scraper_type == 'html'){
         scrapeHtml(start_node, socket);
     }

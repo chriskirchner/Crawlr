@@ -10,7 +10,7 @@ $(document).ready(function(){
 
 		$('span#html').addClass('glyphicon glyphicon-ok');
 		$('span#js').removeClass('glyphicon glyphicon-ok');
-		$('.settings').attr('value', 'html');
+		$('#settings').attr('value', 'html');
 
 	});
 	$('#js').click(function(e){
@@ -18,7 +18,7 @@ $(document).ready(function(){
 
 		$('span#html').removeClass('glyphicon glyphicon-ok');
 		$('span#js').addClass('glyphicon glyphicon-ok');
-		$('.settings').attr('value', 'js');
+		$('#settings').attr('value', 'js');
 
 	});
 });
