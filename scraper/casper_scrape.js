@@ -350,6 +350,7 @@ function BFS(integerLayersDeep){
     	    	findKeyword(keyword);
             	array = verifyUniqueLinks(links, titles, text, false, parent_links, arr_idx);
         	}
+        	
             //var result = JSON.stringify(array, null, "\t");
             //system.stdout.write('\n' + array.url );
 
@@ -363,7 +364,10 @@ function BFS(integerLayersDeep){
 	  });
 
 	});
-	urls = nextLinks;
+    if ( keywordFound === false){
+    	urls = nextLinks;
+    }
+	
 	  		
   });
 
