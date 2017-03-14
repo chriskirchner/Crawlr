@@ -14,22 +14,23 @@ import json
 from time import sleep
 from contextlib import closing
 from random import random
+from random import shuffle
 
-
-NUM_THREADS = 100
+NUM_THREADS = 50
 MAX_DOWNLOAD_SIZE = 500000
 MAX_REQUEST_DELAY = 2
 
 # scraper class for threading
 class Scraper(threading.Thread):
 
-    def __init__(self, unvisited, visited, visited_lock, max_levels, keyword):
+    def __init__(self, unvisited, visited, unvisited_lock, visited_lock, max_levels, keyword, single_path=False):
 
         # inherit and setup thread variables from input
         super(Scraper, self).__init__()
         self.unvisited = unvisited
         self.visited = visited
         self.visited_lock = visited_lock
+        self.unvisited_lock = unvisited_lock
         self.max_levels = max_levels
         self.keyword = keyword
 
@@ -58,13 +59,14 @@ class Scraper(threading.Thread):
         :param parent: parent link
         """
         level = parent.get('level')+1
-        for href in hrefs:
-            link = dict()
-            link['url'] = href
-            link['level'] = level
-            link['parent_url'] = parent['url']
-            self.unvisited.put(link)
-
+        with self.unvisited_lock:
+            shuffle(hrefs)
+            for href in hrefs:
+                link = dict()
+                link['url'] = href
+                link['level'] = level
+                link['parent_url'] = parent['url']
+                self.unvisited.put(link)
 
     def _getLinks(self, tree):
         """
@@ -158,6 +160,9 @@ class Scraper(threading.Thread):
                     links = self._getLinks(tree)
                     del tree
                     self._addLinks(links, link)
+                elif single_path and link.get('level') == int(self.max_levels):
+                    self.unvisited.task_done()
+                    break
             # mark task as done for queue.join
             self.unvisited.task_done()
             sleep(random()*MAX_REQUEST_DELAY)
@@ -174,17 +179,24 @@ if __name__ == "__main__":
 
     # use lock to visited links so only one thread can update at a time
     visited_lock = threading.Lock()
+    unvisited_lock = threading.Lock()
     # make visited links a hashed set so there are not duplicates
     # a bloom filter may improve performance with less memory
     visited_links = set()
     # create a queue of unvisited links added by threads as they scrape
-    if int(search_type) == 1:
+    single_path = False
+    if int(search_type) == 0:
+        # DFS
+        unvisited_links = LifoQueue()
+    elif int(search_type) == 1:
         # BFS
         unvisited_links = Queue()
-    else:
+    elif int(search_type) == 2:
         # DFS
-        # NUM_THREADS = 1
+        NUM_THREADS = 1
         unvisited_links = LifoQueue()
+        single_path = True
+
     threads = list()
 
     first_link = dict()
@@ -196,7 +208,7 @@ if __name__ == "__main__":
 
     # setups and start threads
     for t in range(NUM_THREADS):
-        s = Scraper(unvisited_links, visited_links, visited_lock, max_levels, keyword)
+        s = Scraper(unvisited_links, visited_links, unvisited_lock, visited_lock, max_levels, keyword, single_path)
         s.daemon = True
         s.start()
         threads.append(s)

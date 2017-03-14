@@ -86,9 +86,10 @@ io.on('connect', function(socket){
     console.log('reaping urls...');
     //crawl input is pushed to url history
     session.url_history.push(start_node);
-
-    if (start_node.scraper_type == 'html'){
-        scrapeHtml(start_node, socket);
+    console.log(start_node.scraper_type);
+    if (start_node.scraper_type == 'html' ||
+        start_node.scraper_type == 'scrapy'){
+        scrapePython(start_node, socket);
     }
     else if (start_node.scraper_type == 'js'){
         scrapeJs(start_node, socket);
@@ -122,7 +123,7 @@ http.listen(app.get('port'), function(){
   console.log('Express started on http://localhost:' + app.get('port') + '; press Ctrl-C to terminate.');
 });
 
-function scrapeHtml(start_node, socket){
+function scrapePython(start_node, socket){
 
     shell = null;
 
@@ -131,8 +132,7 @@ function scrapeHtml(start_node, socket){
         mode: 'json',
         pythonPath: './venv/bin/python3',
         pythonOptions: ['-u'],
-        // scriptPath: './scrapys/scrapys/spiders'
-        scriptPath: './scraper/'
+        scriptPath: (start_node.scraper_type=='html')?'./scraper/':'./scrapys/scrapys/spiders'
     };
 
     //arguments for child process
@@ -144,23 +144,28 @@ function scrapeHtml(start_node, socket){
 
     //create python shell for python bfs scraper
     // shell = new pythonShell('bfs_wrapper.py', shellOptions);
-    shell = new pythonShell('scraper_multithreaded.py', shellOptions);
+    shell = new pythonShell(
+        (start_node.scraper_type=='html')?'scraper_multithreaded.py':'scraper_wrapper.py',
+        shellOptions
+    );
 
     //function called when node is received from scraper
     //uploads node to client
-    // var i = 0;
+    var i = 0;
     shell.on('message', function(message){
         //kill scraper when keyword is found
-        // if (i++ > 2000){
-        //     process.kill(-shell.childProcess.pid);
-        //     shell = null;
-        //     // shell.childProcess.kill('SIGTERM');
+        // if (i++ > 100){
+        //     // (start_node.scraper_type=='html')?
+        //     //     shell.childProcess.kill('SIGTERM'):
+        //     //     process.kill(-shell.childProcess.pid);
+        //     shell.childProcess.kill('SIGTERM');
         // }
         if (message.keyword){
-            // shell = null;
             //http://azimi.me/2014/12/31/kill-child_process-node-js.html
-            // process.kill(-shell.childProcess.pid);
-            shell.childProcess.kill('SIGTERM');
+            // (start_node.scraper_type=='html')?
+            //     shell.childProcess.kill('SIGTERM'):
+                process.kill(-shell.childProcess.pid);
+            // shell.childProcess.kill('SIGTERM');
         }
         //send node to client
         console.log(message);
@@ -184,8 +189,8 @@ function scrapeHtml(start_node, socket){
     socket.on('disconnect', function(){
         //kills scraper on disconnect
         if (shell){
-            // process.kill(-shell.childProcess.pid);
-            shell.childProcess.kill('SIGTERM');
+            process.kill(-shell.childProcess.pid);
+            // shell.childProcess.kill('SIGTERM');
         }
         console.log('user disconnected');
     });
@@ -194,6 +199,9 @@ function scrapeHtml(start_node, socket){
 function scrapeJs(start_node, socket){
 
     casper = null;
+
+    //https://github.com/ariya/phantomjs/issues/14376
+    process.env.QT_QPA_PLATFORM='offscreen';
 
     var startURL = start_node.url,
         additionalScrapeValue = start_node.max_levels,

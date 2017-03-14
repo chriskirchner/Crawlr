@@ -128,25 +128,50 @@ function setupGFX_Graph(){
     nodeGroup = g.append("g");
 
     //setup force layout template
-    simulation = d3.forceSimulation(nodes)
-        .force("charge", d3.forceManyBody().strength(-35))
-        .force("link", d3.forceLink().distance(NODE_DISTANCE))
-        .force("x", d3.forceX(0).strength(0.002))
-        .force("y", d3.forceY(0).strength(0.002))
-		.force("-x_right", d3.forceX(0).strength(0.02))
-		.force("-x_left", d3.forceX(width).strength(0.02))
-		.force("-y_top", d3.forceY(0).strength(0.02))
-		.force("-y_bottom", d3.forceY(height).strength(0.02))
-		// .force("collision", d3.forceCollide(20).strength(0.1))
-        .on("tick", function(){
-            if (NUM_TICKS > TICKS_TO_SKIP){
-                ticked();
-                NUM_TICKS = 0;
-            }
-            else {
-                NUM_TICKS += 1;
-            }
-        });
+    if (user_input.crawl_type == '0' || user_input.crawl_type == '1'){
+        simulation = d3.forceSimulation(nodes)
+            .force("charge", d3.forceManyBody().strength(-35))
+            .force("link", d3.forceLink().distance(NODE_DISTANCE))
+            .force("x", d3.forceX(0).strength(0.002))
+            .force("y", d3.forceY(0).strength(0.002))
+            .force("-x_right", d3.forceX(0).strength(0.02))
+            .force("-x_left", d3.forceX(width).strength(0.02))
+            .force("-y_top", d3.forceY(0).strength(0.02))
+            .force("-y_bottom", d3.forceY(height).strength(0.02))
+            // .force("collision", d3.forceCollide(20).strength(0.1))
+            .on("tick", function(){
+                if (NUM_TICKS > TICKS_TO_SKIP){
+                    ticked();
+                    NUM_TICKS = 0;
+                }
+                else {
+                    NUM_TICKS += 1;
+                }
+            });
+    }
+    else if (user_input.crawl_type == '2') {
+        var wall_force = 0.05;
+        simulation = d3.forceSimulation(nodes)
+            .force("charge", d3.forceManyBody().strength(-400))
+            .force("link", d3.forceLink().distance(NODE_DISTANCE))
+            .force("x", d3.forceX(0).strength(0.001))
+            .force("y", d3.forceY(0).strength(0.001))
+            .force("-x_right", d3.forceX(0).strength(wall_force))
+            .force("-x_left", d3.forceX(width).strength(wall_force))
+            .force("-y_top", d3.forceY(0).strength(wall_force))
+            .force("-y_bottom", d3.forceY(height).strength(wall_force))
+            // .force("collision", d3.forceCollide(20).strength(0.1))
+            .on("tick", function(){
+                if (NUM_TICKS > TICKS_TO_SKIP){
+                    ticked();
+                    NUM_TICKS = 0;
+                }
+                else {
+                    NUM_TICKS += 1;
+                }
+            });
+    }
+
 }
 
 // var transform = d3.zoomIdentity.translate(width/2, height/2).scale(d3.event.transform.k);
@@ -1126,10 +1151,16 @@ $(document).ready(function(){
 		user_input.max_levels = $('#levels').val();
 		user_input.crawl_type = $('#crawl_type').val();
         user_input.visual_type = $('#visual_type').val();
+<<<<<<< HEAD
         user_input.scraper_type = $('#settings').val();
         console.log(user_input.scraper_type);
+=======
+        user_input.scraper_type = $('#settings').attr('value');
+>>>>>>> master
 		user_input.level = 0;
 		user_input.parent = null;
+
+		console.log(user_input);
 
 		//send user input to server
 		socket.emit('reap urls', user_input);
