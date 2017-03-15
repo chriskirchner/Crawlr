@@ -461,7 +461,6 @@ function trimTree(nodes) {
 		}
     }
     recurse(root);
-    console.log(getNodes(root).length);
 
 	//make sure immediate children are visible
 
@@ -627,8 +626,6 @@ function updateGFX_Pack(root)
   var focus = root,
       nodes = pack(root).descendants(),
       view;
-
-      console.log(root);
 
   circle = g.selectAll("circle")
     .data(nodes)
@@ -1152,11 +1149,8 @@ $(document).ready(function(){
 		user_input.crawl_type = $('#crawl_type').val();
         user_input.visual_type = $('#visual_type').val();
         user_input.scraper_type = $('#settings').val();
-        console.log(user_input.scraper_type);
 		user_input.level = 0;
 		user_input.parent = null;
-
-		console.log(user_input);
 
 		//send user input to server
 		socket.emit('reap urls', user_input);

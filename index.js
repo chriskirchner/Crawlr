@@ -174,8 +174,8 @@ function scrapePython(start_node, socket){
             //http://azimi.me/2014/12/31/kill-child_process-node-js.html
             // (start_node.scraper_type=='html')?
             //     shell.childProcess.kill('SIGTERM'):
-                process.kill(-shell.childProcess.pid);
-            // shell.childProcess.kill('SIGTERM');
+            //     process.kill(-shell.childProcess.pid);
+            shell.childProcess.kill('SIGTERM');
         }
         //send node to client
         console.log(message);
@@ -199,8 +199,8 @@ function scrapePython(start_node, socket){
     socket.on('disconnect', function(){
         //kills scraper on disconnect
         if (shell){
-            process.kill(-shell.childProcess.pid);
-            // shell.childProcess.kill('SIGTERM');
+            // process.kill(-shell.childProcess.pid);
+            shell.childProcess.kill('SIGTERM');
         }
         console.log('user disconnected');
     });
