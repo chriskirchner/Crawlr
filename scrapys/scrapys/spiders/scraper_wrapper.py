@@ -14,18 +14,22 @@ keyword = sys.argv[3]
 search_type = sys.argv[4]
 
 process = CrawlerProcess(get_project_settings())
-process.settings.set('DEPTH_LIMIT', max_levels)
+
 
 if int(search_type) == 0:
     # DFS
     # Scrapy naturally uses DFO search order
     process.settings.set('DEPTH_PRIORITY', 0)
+    process.settings.set('CONCURRENT_REQUESTS', 1)
 
 elif int(search_type) == 1:
     # BFS
     process.settings.set('DEPTH_PRIORITY', 1)
     process.settings.set('SCHEDULER_DISK_QUEUE', 'scrapy.squeues.PickleFifoDiskQueue')
     process.settings.set('SCHEDULER_MEMORY_QUEUE', 'scrapy.squeues.FifoMemoryQueue')
+
+process.settings.set('DEPTH_LIMIT', max_levels)
+
 
 def sig_handler(sig, frame):
     process.stop()

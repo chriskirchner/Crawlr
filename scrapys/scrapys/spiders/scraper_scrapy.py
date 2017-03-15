@@ -21,6 +21,11 @@ class BfsScraper(scrapy.Spider):
         self.start_urls = [kwargs.get('start_url')]
         self.keyword = kwargs.get('keyword')
         self.link_extractor = LinkExtractor()
+    #     self.scrape_type = kwargs.get('scrape_type')
+    #     self._setup
+    #
+    # def _setup(self):
+    #     if self.cr
 
     def parse(self, response):
         # NEED TO PARSE TEXT FOR KEYWORD
