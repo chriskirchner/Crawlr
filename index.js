@@ -13,9 +13,10 @@ var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var io = require('socket.io')(http);
 var spawn = require('child_process').spawn;
 var pythonShell = require('python-shell');
-var session = require('express-session');
+
 var JSONStream = require('JSONStream');
 var stream = JSONStream.parse();
+// var RedisStore = require("connect-redis")(session);
 
 
 //setup handlebars
@@ -33,43 +34,59 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/public'));
 //setup session secret
-app.use(cookieParser());
-app.use(session({
-  name: 'server-session-cookie-id',
-  secret: 'my express secret',
-  saveUninitialized: true,
-  resave: true,
-  store: new FileStore()
+
+
+
+
+
+var session = require("express-session")({
+    secret: "my-secret",
+    resave: true,
+    saveUninitialized: true
+  });
+
+var sharedsession = require("express-socket.io-session");
+
+
+
+app.use(session);
+
+// Share session with io sockets
+
+io.use(sharedsession(session, {
+    autoSave:true
 }));
 
-req.session.url_history = [];
 
 //home page resource
 app.get('/',function(req,res){
 
   context = {};
-  context.url_history = session.url_history;
 
-  for (var c in context.url_history)
-  {
-    if (context.url_history[c].crawl_type == '0') {
-      context.url_history[c].crawl_type = "Depth-First";
-    }
+  console.log(req.session.userdata);
+//   context.url_history = req.session.userdata;
 
-    else if(context.url_history[c].crawl_type == '1') {
-      context.url_history[c].crawl_type = "Breadth-First";
-    }
+//   for (var c in context.url_history)
+//   {
+//     if (context.url_history[c].crawl_type == '0') {
+//       context.url_history[c].crawl_type = "Depth-First";
+//     }
 
-    if (context.url_history[c].visual_type == '0') {
-      context.url_history[c].visual_type = "Graph";
-    }
+//     else if(context.url_history[c].crawl_type == '1') {
+//       context.url_history[c].crawl_type = "Breadth-First";
+//     }
 
-    else if(context.url_history[c].visual_type == '1') {
-      context.url_history[c].visual_type = "Circle Packing";
-    }
+//     if (context.url_history[c].visual_type == '0') {
+//       context.url_history[c].visual_type = "Graph";
+//     }
+
+//     else if(context.url_history[c].visual_type == '1') {
+//       context.url_history[c].visual_type = "Circle Packing";
+//     }
+// }
 
 
-  }
+  
 
   res.render('home', context);
 
@@ -93,9 +110,23 @@ io.on('connect', function(socket){
   var shell = null;
   socket.on('reap urls', function(start_node){
 
-    console.log('reaping urls...');
+    // console.log('reaping urls...');
     //crawl input is pushed to url history
-    req.session.url_history.push(start_node);
+
+    if (socket.handshake.session.userdata)
+    {
+        socket.handshake.session.userdata.push(start_node);
+
+    }
+    else
+    {
+        socket.handshake.session.userdata = start_node;
+    }
+    
+    socket.handshake.session.save();
+
+    
+
     console.log(start_node.scraper_type);
     if (start_node.scraper_type == 'html' ||
         start_node.scraper_type == 'scrapy'){
@@ -140,7 +171,7 @@ function scrapePython(start_node, socket){
     //setup python shell options for child_process
     var shellOptions = {
         mode: 'json',
-        pythonPath: './env/Scripts/python',
+        pythonPath: './venv/bin/python3',
         pythonOptions: ['-u'],
         scriptPath: (start_node.scraper_type=='html')?'./scraper/':'./scrapys/scrapys/spiders'
     };
