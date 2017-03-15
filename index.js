@@ -63,27 +63,27 @@ app.get('/',function(req,res){
 
   context = {};
 
-  console.log(req.session.userdata);
-//   context.url_history = req.session.userdata;
 
-//   for (var c in context.url_history)
-//   {
-//     if (context.url_history[c].crawl_type == '0') {
-//       context.url_history[c].crawl_type = "Depth-First";
-//     }
+  context.url_history = req.session.userdata;
 
-//     else if(context.url_history[c].crawl_type == '1') {
-//       context.url_history[c].crawl_type = "Breadth-First";
-//     }
+  for (var c in context.url_history)
+  {
+    if (context.url_history[c].crawl_type == '0') {
+      context.url_history[c].crawl_type = "Depth-First";
+    }
 
-//     if (context.url_history[c].visual_type == '0') {
-//       context.url_history[c].visual_type = "Graph";
-//     }
+    else if(context.url_history[c].crawl_type == '1') {
+      context.url_history[c].crawl_type = "Breadth-First";
+    }
 
-//     else if(context.url_history[c].visual_type == '1') {
-//       context.url_history[c].visual_type = "Circle Packing";
-//     }
-// }
+    if (context.url_history[c].visual_type == '0') {
+      context.url_history[c].visual_type = "Graph";
+    }
+
+    else if(context.url_history[c].visual_type == '1') {
+      context.url_history[c].visual_type = "Circle Packing";
+    }
+}
 
 
   
@@ -120,7 +120,8 @@ io.on('connect', function(socket){
     }
     else
     {
-        socket.handshake.session.userdata = start_node;
+        socket.handshake.session.userdata = [];
+        socket.handshake.session.userdata.push(start_node);
     }
     
     socket.handshake.session.save();
