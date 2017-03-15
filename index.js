@@ -17,6 +17,7 @@ var session = require('express-session');
 var JSONStream = require('JSONStream');
 var stream = JSONStream.parse();
 
+
 //setup handlebars
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
@@ -26,13 +27,22 @@ app.set('port', 8080);
 var bodyParser = require('body-parser');
 /*needed for post request */
 
+
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/public'));
 //setup session secret
-app.use(session({secret:'SuperSecretPassword'}));
+app.use(cookieParser());
+app.use(session({
+  name: 'server-session-cookie-id',
+  secret: 'my express secret',
+  saveUninitialized: true,
+  resave: true,
+  store: new FileStore()
+}));
 
-session.url_history = [];
+req.session.url_history = [];
 
 //home page resource
 app.get('/',function(req,res){
@@ -69,7 +79,7 @@ app.get('/',function(req,res){
 app.post('/', function(req, res, next){
 
   if (req.body.action === 'reset'){
-    session.url_history = [];
+    req.session.url_history = [];
 	}
 });
 
@@ -85,7 +95,7 @@ io.on('connect', function(socket){
 
     console.log('reaping urls...');
     //crawl input is pushed to url history
-    session.url_history.push(start_node);
+    req.session.url_history.push(start_node);
     console.log(start_node.scraper_type);
     if (start_node.scraper_type == 'html' ||
         start_node.scraper_type == 'scrapy'){
@@ -130,7 +140,7 @@ function scrapePython(start_node, socket){
     //setup python shell options for child_process
     var shellOptions = {
         mode: 'json',
-        pythonPath: './venv/bin/python3',
+        pythonPath: './env/Scripts/python',
         pythonOptions: ['-u'],
         scriptPath: (start_node.scraper_type=='html')?'./scraper/':'./scrapys/scrapys/spiders'
     };
