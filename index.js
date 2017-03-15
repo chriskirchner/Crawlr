@@ -13,9 +13,11 @@ var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var io = require('socket.io')(http);
 var spawn = require('child_process').spawn;
 var pythonShell = require('python-shell');
-var session = require('express-session');
+
 var JSONStream = require('JSONStream');
 var stream = JSONStream.parse();
+// var RedisStore = require("connect-redis")(session);
+
 
 //setup handlebars
 app.engine('handlebars', handlebars.engine);
@@ -26,19 +28,43 @@ app.set('port', 8080);
 var bodyParser = require('body-parser');
 /*needed for post request */
 
+
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/public'));
 //setup session secret
-app.use(session({secret:'SuperSecretPassword'}));
 
-session.url_history = [];
+
+
+
+
+var session = require("express-session")({
+    secret: "my-secret",
+    resave: true,
+    saveUninitialized: true
+  });
+
+var sharedsession = require("express-socket.io-session");
+
+
+
+app.use(session);
+
+// Share session with io sockets
+
+io.use(sharedsession(session, {
+    autoSave:true
+}));
+
 
 //home page resource
 app.get('/',function(req,res){
 
   context = {};
-  context.url_history = session.url_history;
+
+
+  context.url_history = req.session.userdata;
 
   for (var c in context.url_history)
   {
@@ -57,9 +83,10 @@ app.get('/',function(req,res){
     else if(context.url_history[c].visual_type == '1') {
       context.url_history[c].visual_type = "Circle Packing";
     }
+}
 
 
-  }
+  
 
   res.render('home', context);
 
@@ -69,7 +96,7 @@ app.get('/',function(req,res){
 app.post('/', function(req, res, next){
 
   if (req.body.action === 'reset'){
-    session.url_history = [];
+    req.session.url_history = [];
 	}
 });
 
@@ -83,9 +110,24 @@ io.on('connect', function(socket){
   var shell = null;
   socket.on('reap urls', function(start_node){
 
-    console.log('reaping urls...');
+    // console.log('reaping urls...');
     //crawl input is pushed to url history
-    session.url_history.push(start_node);
+
+    if (socket.handshake.session.userdata)
+    {
+        socket.handshake.session.userdata.push(start_node);
+
+    }
+    else
+    {
+        socket.handshake.session.userdata = [];
+        socket.handshake.session.userdata.push(start_node);
+    }
+    
+    socket.handshake.session.save();
+
+    
+
     console.log(start_node.scraper_type);
     if (start_node.scraper_type == 'html' ||
         start_node.scraper_type == 'scrapy'){
