@@ -207,7 +207,7 @@ function scrapePython(start_node, socket){
             // (start_node.scraper_type=='html')?
             //     shell.childProcess.kill('SIGTERM'):
             //     process.kill(-shell.childProcess.pid);
-            shell.childProcess.kill('SIGTERM');
+            shell.childProcess.kill('SIGINT');
         }
         //send node to client
         console.log(message);
@@ -223,7 +223,7 @@ function scrapePython(start_node, socket){
     shell.on('exit', function(){
         shell = null;
     });
-    shell.childProcess.on('SIGTERM', function(){
+    shell.childProcess.on('SIGINT', function(){
         shell = null;
     });
 
@@ -232,7 +232,7 @@ function scrapePython(start_node, socket){
         //kills scraper on disconnect
         if (shell){
             // process.kill(-shell.childProcess.pid);
-            shell.childProcess.kill('SIGTERM');
+            shell.childProcess.kill('SIGINT');
         }
         console.log('user disconnected');
     });
