@@ -96,7 +96,7 @@ app.get('/',function(req,res){
 app.post('/', function(req, res, next){
 
   if (req.body.action === 'reset'){
-    req.session.url_history = [];
+    req.session.userdata = [];
 	}
 });
 
