@@ -72,12 +72,9 @@ var tip = d3.tip()
         //     .style('stroke-width', 2)
         //     .style('stroke', '266ca9')
         //     .style('r', NODE_RADIUS*1.5);
-        html = "<strong>Title:</strong> <span style='color:red'>" + d.title + "</span>" + "<br>" +
-            "<strong>URL:</strong> <span style='color:red'>" + d.url + "</span>" + "<br>" +
-			"<strong>Hidden Count:</strong> <span style='color:red'>" + d._child_count + "</span>"+ "<br>" +
-			"<strong>Timestamp:</strong> <span style='color:red'>" + d.timestamp + "</span>"+ "<br>" +
-			"<strong>Total Count:</strong> <span style='color:red'>" + d.child_count + "</span>" + "<br>" +
-        	"<strong>Direct Hidden Count:</strong> <span style='color:red'>" + d._children.length + "</span>";
+        html = "<strong>Title:</strong> <span style='color: #266ca9'>" + d.title + "</span>" + "<br>" +
+            "<strong>URL:</strong> <span style='color:#266ca9'>" + d.url + "</span>" + "<br>" +
+			"<strong>Total Count:</strong> <span style='color:#266ca9'>" + d.child_count + "</span>" + "<br>";
         return html;
     });
 
