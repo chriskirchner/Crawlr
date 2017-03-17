@@ -10,7 +10,7 @@
             </button>
             <a class="navbar-brand" href="/">Crawlr</a>
         </div>
-        <form class="navbar-form navbar-left row" action ="/" id="crawl-form" method="post">
+        <form class="navbar-form navbar-nav" action ="/" id="crawl-form" method="post">
         <div class="form-group">
     					
                         <input type="text" class="form-control shift-left" name="url" id="url" placeholder="URL" autocompete="on">
@@ -41,13 +41,15 @@
 
   			<input type="submit" class="btn btn-default" name="crawlSubmit" id="crawlSubmit" value="Crawl"  title= "URL must have 'http://' or 'https://'">
 
-</form>
-
-        <div class="navbar-collapse collapse navbar-right " >
-            <select name="visual_type" class="selectpicker md-input show-tick" id="settings">
+            <div class="navbar-collapse collapse navbar-right " >
+            <select name="visual_type" class="selectpicker sm-input show-tick" id="settings">
                           <option data-icon="glyphicon glyphicon-align-justify" value="html">html</option>
                           <option data-icon="glyphicon glyphicon-flash" value="js">js</option>
                         </select>
+
+</form>
+
+        
                 {{!-- <ul class="nav navbar-nav">
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" id="settings" value="html" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
