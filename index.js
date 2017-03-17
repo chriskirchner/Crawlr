@@ -36,9 +36,6 @@ app.use(express.static(__dirname + '/public'));
 //setup session secret
 
 
-
-
-
 var session = require("express-session")({
     secret: "my-secret",
     resave: true,
@@ -54,7 +51,7 @@ app.use(session);
 // Share session with io sockets
 
 io.use(sharedsession(session, {
-    autoSave:true
+    autoSave: true
 }));
 
 
@@ -83,10 +80,8 @@ app.get('/',function(req,res){
     else if(context.url_history[c].visual_type == '1') {
       context.url_history[c].visual_type = "Circle Packing";
     }
-}
+  }
 
-
-  
 
   res.render('home', context);
 
@@ -95,9 +90,12 @@ app.get('/',function(req,res){
 //get ajax request from client with url, etc
 app.post('/', function(req, res, next){
 
-  if (req.body.action === 'reset'){
-    req.session.userdata = [];
-	}
+    if (req.body.action == 'reset'){
+        console.log(req.session);
+        req.session.userdata = [];
+        req.session.save();
+    }
+
 });
 
 
@@ -112,6 +110,7 @@ io.on('connect', function(socket){
 
     // console.log('reaping urls...');
     //crawl input is pushed to url history
+
 
     if (socket.handshake.session.userdata)
     {

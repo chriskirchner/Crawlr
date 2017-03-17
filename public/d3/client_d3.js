@@ -11,7 +11,7 @@
  * https://jsfiddle.net/t4vzg650/6/ with a lot of customization to make the data dynamic
  * and the force layout revolving.  The traditional approach of using d3.hierarchy to build the force
  * simulation led to poor glitchy graphics.  The hierarchy here is customized for dynamic buffered data.
- * Author: Chris Kirchner
+ * Author: Chris Kirchner (force layout and dynamic uploading) & Christiano Vannelli (pack layout)
  * Email: kirchnch@oregonstate.edu
  */
 
@@ -179,7 +179,6 @@ function zoomer(){
 		.scale(d3.event.transform.k)
 	);
 }
-
 
 function setupGFX_Pack(){
 
