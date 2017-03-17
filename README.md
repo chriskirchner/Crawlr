@@ -4,8 +4,8 @@ Capstone Project - Web Crawler
 Chris Kirchner, Christiano Vannellic, Himal Patel
 
 ##### Hosted Websites:
-http://138.68.29.97:8080
-http://138.197.208.219:8200
+* http://138.68.29.97:8080
+* http://138.197.208.219:8200
 
 ##### SETUP on Ubuntu (requires sudo):
 
