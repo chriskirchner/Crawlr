@@ -11,7 +11,7 @@
  * https://jsfiddle.net/t4vzg650/6/ with a lot of customization to make the data dynamic
  * and the force layout revolving.  The traditional approach of using d3.hierarchy to build the force
  * simulation led to poor glitchy graphics.  The hierarchy here is customized for dynamic buffered data.
- * Author: Chris Kirchner
+ * Author: Chris Kirchner (force layout and dynamic uploading) & Christiano Vannelli (pack layout)
  * Email: kirchnch@oregonstate.edu
  */
 
@@ -72,12 +72,9 @@ var tip = d3.tip()
         //     .style('stroke-width', 2)
         //     .style('stroke', '266ca9')
         //     .style('r', NODE_RADIUS*1.5);
-        html = "<strong>Title:</strong> <span style='color:red'>" + d.title + "</span>" + "<br>" +
-            "<strong>URL:</strong> <span style='color:red'>" + d.url + "</span>" + "<br>" +
-			"<strong>Hidden Count:</strong> <span style='color:red'>" + d._child_count + "</span>"+ "<br>" +
-			"<strong>Timestamp:</strong> <span style='color:red'>" + d.timestamp + "</span>"+ "<br>" +
-			"<strong>Total Count:</strong> <span style='color:red'>" + d.child_count + "</span>" + "<br>" +
-        	"<strong>Direct Hidden Count:</strong> <span style='color:red'>" + d._children.length + "</span>";
+        html = "<strong>Title:</strong> <span style='color: #266ca9'>" + d.title + "</span>" + "<br>" +
+            "<strong>URL:</strong> <span style='color:#266ca9'>" + d.url + "</span>" + "<br>" +
+			"<strong>Total Count:</strong> <span style='color:#266ca9'>" + d.child_count + "</span>" + "<br>";
         return html;
     });
 
@@ -182,7 +179,6 @@ function zoomer(){
 		.scale(d3.event.transform.k)
 	);
 }
-
 
 function setupGFX_Pack(){
 

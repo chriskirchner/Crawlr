@@ -1,5 +1,5 @@
 # Script: bfs.py
-# Description: multithreaded bfs scraper that collects all links starting with single url and sends to server
+# Description: multithreaded bfs and dfs scraper that collects all links starting with single url and sends to server
 # Author: Chris Kirchner
 # Email: kirchnch@oregonstate.edu
 
