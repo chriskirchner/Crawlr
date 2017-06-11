@@ -3,9 +3,8 @@ Capstone Project - Web Crawler
 
 Chris Kirchner, Christiano Vannellic, Himal Patel
 
-##### Hosted Websites:
-* http://138.68.29.97:8080
-* http://138.197.208.219:8200
+##### Hosted Website:
+[http://www.capstoneproject.com](http://138.68.29.97:8080/)
 
 ##### SETUP on Ubuntu (requires sudo):
 
@@ -18,8 +17,8 @@ User Instructions
 NOTE: The application fits all of required inputs into the navigation bar at the top of the web page.  Additional scraper type options can be found on the top right of the navbar.  The BFS and Single-Path search types, in conjunction with the “html” Python scraper (default), meet all user requirements.  The casperjs (“js”) option has been removed from options (see Discussion of Casper Scraper).
 
 User Input:
-1. Go to “http://138.68.29.97:8080” or “http://138.197.208.219:8200/”
-2. Input the starting URL. (e.g, http://www.sciencekids.co.nz/sciencefacts/animals/cat.html )
+1. Go [here](http://138.68.29.97:8080/)
+2. Input the starting URL. (e.g., http://www.sciencekids.co.nz/sciencefacts/animals/cat.html)
 3. <OPTIONAL> Input the desired keyword (the scraper will halt on discovery).
 4. Input the number of levels to traverse (must be greater than 0).
 5. Select a search type (BFS, DFS, or Single-Path DFS)
