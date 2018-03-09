@@ -16,7 +16,7 @@ node index.js
 ##### User Instructions
 
 Start Scraping
-1. Go [here](http://138.68.29.97:8080/)
+1. Go [here](http://159.89.136.195:8080/)
 2. Input a starting URL. (e.g., http://www.sciencekids.co.nz/sciencefacts/animals/cat.html)
 3. <OPTIONAL> Input the desired keyword (the scraper will halt on discovery).
 4. Input the number of levels to traverse (must be greater than 0).
