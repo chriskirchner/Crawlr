@@ -1,4 +1,4 @@
-# Web Crawler
+# Crawlr
 
 <p align="center">
 <a href="https://youtu.be/yHv8RUs1N2c">
@@ -7,15 +7,16 @@
 </p>
 
 ## Overview
-The web crawler is a relative search engine that graphically searches 
+The Crawlr is a relative search engine that graphically searches 
 for an optional search term from a starting URL up until a certain URL depth limit 
 using breadth-first-search or depth-first-search techniques.  The search paths are 
 visually displayed in either a collapsible force-layout or a pack hierarchy layout.
   A multithreaded synchronous lxml based scrapper or a asynchronous scrapy based 
 scraper can be used to discover the path.
 
-## Website Link
-[Web Crawler](http://159.89.136.195:8080/)
+## Crawlr Links
+[Crawlr Site](http://159.89.136.195:8080/)<br>
+[Crawlr Report](CrawlerReport.PDF)
 
 ## User Instructions
 
@@ -48,7 +49,28 @@ scraper can be used to discover the path.
 3. Click “Clear History” (this deletes the search history corresponding to the user’s cookie)
 
 ## Software Architecture
-[](CrawlerArchitecture.PNG)
+![](CrawlerArchitecture.png)
+
+## Software Libraries
+- Node.js
+  - Express (web framework)
+  - Express-handlebars (html templating)
+  - Express-session
+  - Body-parser (parses bodies, e.g. POST requests)
+  - Http (server)
+  - JSONStream
+  - Socket.IO (used to create persistent connection for uploading links to client real-time, http://socket.io/ )
+  - Socket.io-client (used to receive links real-time on client)
+  - Python-shell (used to integrate child-processes into nodejs)
+- Bootstrap (used for frontend js, html, and css)
+- jQuery
+- Python
+  - Lxml (fast c-based html and xml parsing library)
+  - Bs4 (used for their Unicode conversion library from bad html)
+  - Requests (http connection library)
+  - Scrapy (awesome production level scraping module)
+  - Cssselect (selecting elements by css)
+- D3.js (used for visuals)
 
 ## Host on Ubuntu (requires sudo):
 
@@ -61,3 +83,4 @@ node index.js
 - Chris Kirchner
 - Christiano Vannellic
 - Himal Patel
+
