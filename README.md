@@ -1,25 +1,21 @@
 # Web Crawler
 
-<p align="center"><img width=100% src="Crawler.PNG"></p>
+<p align="center">
+<a href="https://youtu.be/yHv8RUs1N2c">
+<img width=100% src="Crawler.PNG">
+</a>
+</p>
 
 ## Overview
 The web crawler is a relative search engine that graphically searches 
-for a word (optional) from a starting URL up until a certain depth limit 
+for an optional search term from a starting URL up until a certain URL depth limit 
 using breadth-first-search or depth-first-search techniques.  The search paths are 
-visually displayed in either a dynamic collapsible force-layout or a pack hierarchy layout.
-  Either a multithreaded synchronous lxml based scrapper or a asynchronous scrapy based 
-scraper discovers the path
-
+visually displayed in either a collapsible force-layout or a pack hierarchy layout.
+  A multithreaded synchronous lxml based scrapper or a asynchronous scrapy based 
+scraper can be used to discover the path.
 
 ## Website Link
 [Web Crawler](http://159.89.136.195:8080/)
-
-## SETUP on Ubuntu (requires sudo):
-
-```chmod +x setup
-./setup
-node index.js
-```
 
 ## User Instructions
 
@@ -50,6 +46,16 @@ node index.js
 1. Refresh page (this generates the user’s search history)
 2. Select option from dropdown (this automatically populates user inputs with past info)
 3. Click “Clear History” (this deletes the search history corresponding to the user’s cookie)
+
+## Software Architecture
+[](CrawlerArchitecture.PNG)
+
+## Host on Ubuntu (requires sudo):
+
+```chmod +x setup
+./setup
+node index.js
+```
 
 ## Credits
 - Chris Kirchner
