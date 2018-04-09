@@ -72,7 +72,7 @@ scraper can be used to discover the path.
   - Cssselect (selecting elements by css)
 - D3.js (used for visuals)
 
-## Host on Ubuntu (requires sudo):
+## Host on Ubuntu
 
 ```chmod +x setup
 ./setup
