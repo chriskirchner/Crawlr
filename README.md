@@ -1,9 +1,14 @@
 # Web Crawler
 
-<div style="position:relative;height:0;padding-bottom:75.0%"><iframe src="https://www.youtube.com/embed/yHv8RUs1N2c?ecver=2" width="480" height="360" frameborder="0" allow="autoplay; encrypted-media" style="position:absolute;width:100%;height:100%;left:0" allowfullscreen></iframe></div>
-
+<p align="center"><img width=100% src="Crawler.PNG"></p>
 
 ## Overview
+The web crawler is a relative search engine that graphically searches 
+for a word (optional) from a starting URL up until a certain depth limit 
+using breadth-first-search or depth-first-search techniques.  The search paths are 
+visually displayed in either a dynamic collapsible force-layout or a pack hierarchy layout.
+  Either a multithreaded synchronous lxml based scrapper or a asynchronous scrapy based 
+scraper discovers the path
 
 
 ## Website Link
