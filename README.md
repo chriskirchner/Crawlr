@@ -49,7 +49,7 @@ scraper can be used to discover the path.
 3. Click “Clear History” (this deletes the search history corresponding to the user’s cookie)
 
 ## Software Architecture
-![](CrawlerArchitecture.png)
+![](CrawlerArchitecture.PNG)
 
 ## Software Libraries
 - Node.js
