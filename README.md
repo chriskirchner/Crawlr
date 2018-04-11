@@ -2,7 +2,7 @@
 
 <p align="center">
 <a href="https://youtu.be/yHv8RUs1N2c">
-<img width=100% onmouseout="this.src='Crawlr.PNG'">
+<img width=100% src='Crawlr.PNG'>
 </a>
 </p>
 
@@ -59,7 +59,7 @@ scraper can be used to discover the path.
   - Body-parser (parses bodies, e.g. POST requests)
   - Http (server)
   - JSONStream
-  - Socket.IO (used to create persistent connection for uploading links to client real-time, http://socket.io/ )
+  - Socket.IO (used to create persistent connection for uploading links to client real-time)
   - Socket.io-client (used to receive links real-time on client)
   - Python-shell (used to integrate child-processes into nodejs)
 - Bootstrap (used for frontend js, html, and css)
